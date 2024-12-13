@@ -2,45 +2,88 @@
 
 namespace Model\Adm;
 
-use App\DB;
+use PDO;
+use PDOException;
 
-class  DeckModel{
+class DeckModel
+{
+    private static function connect()
+    {
+       
+        $host = 'localhost';
+        $dbName = 'nome_do_banco';
+        $username = 'usuario';
+        $password = 'senha';
 
+        try {
+            $pdo = new PDO("mysql:host=$host;dbname=$dbName", $username, $password);
+            $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+            return $pdo;
+        } catch (PDOException $e) {
+            die('Erro na conexão com o banco de dados: ' . $e->getMessage());
+        }
+    }
 
     public static function createDeck($name, $qntd_cards, $disponible)
     {
-        return DB::run(
-            "INSERT INTO deck (name, qntd_cards, disponible) 
-            VALUES (?, ?, ?, ?)",
-            [$name, $qntd_cards, $disponible]
-        );
+        $sql = "INSERT INTO deck (name, qntd_cards, disponible) VALUES (?, ?, ?)";
+        try {
+            $pdo = self::connect();
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([$name, $qntd_cards, $disponible]);
+            return $pdo->lastInsertId();
+        } catch (PDOException $e) {
+            die('Erro ao criar deck: ' . $e->getMessage());
+        }
     }
 
-
-    public static function getDeckByID($Deck_ID) {
-        return DB::run("SELECT  name, qntd_cards, disponible; 
-        FROM deck WHERE id = ?", [$Deck_ID]);
-    }
-
-    public static function getAll() {
-        return DB::run("SELECT name, qntd_cards, disponible;
-        FROM deck");
-    } 
-
-    public static function deleteDeckByID($Deck_ID) {
-        return DB::run("DELETE FROM deck WHERE id = ?", [$Deck_ID]);
-    }
-
-
-    public static function updateDeck($name, $qntd_cards, $disponible)
+    public static function getDeckByID($Deck_ID)
     {
-        return DB::runFR(
-            "UPDATE deck
-                SET name = ?, qntd_cards = ?, disponible = ?
-             WHERE id = ?",
-            [
-                $name, $qntd_cards, $disponible
-            ]
-        );
+        $sql = "SELECT id, name, qntd_cards, disponible FROM deck WHERE id = ?";
+        try {
+            $pdo = self::connect();
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([$Deck_ID]);
+            return $stmt->fetch();
+        } catch (PDOException $e) {
+            die('Erro ao buscar deck por ID: ' . $e->getMessage());
+        }
+    }
+
+    public static function getAll()
+    {
+        $sql = "SELECT id, name, qntd_cards, disponible FROM deck";
+        try {
+            $pdo = self::connect();
+            $stmt = $pdo->query($sql);
+            return $stmt->fetchAll();
+        } catch (PDOException $e) {
+            die('Erro ao buscar todos os decks: ' . $e->getMessage());
+        }
+    }
+
+    public static function deleteDeckByID($Deck_ID)
+    {
+        $sql = "DELETE FROM deck WHERE id = ?";
+        try {
+            $pdo = self::connect();
+            $stmt = $pdo->prepare($sql);
+            return $stmt->execute([$Deck_ID]);
+        } catch (PDOException $e) {
+            die('Erro ao deletar deck: ' . $e->getMessage());
+        }
+    }
+
+    public static function updateDeck($id, $name, $qntd_cards, $disponible)
+    {
+        $sql = "UPDATE deck SET name = ?, qntd_cards = ?, disponible = ? WHERE id = ?";
+        try {
+            $pdo = self::connect();
+            $stmt = $pdo->prepare($sql);
+            return $stmt->execute([$name, $qntd_cards, $disponible, $id]);
+        } catch (PDOException $e) {
+            die('Erro ao atualizar deck: ' . $e->getMessage());
+        }
     }
 }
