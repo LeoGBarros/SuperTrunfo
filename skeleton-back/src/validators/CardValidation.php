@@ -12,39 +12,37 @@ use Model\Adm\CardModel;
 class CardValidation
 {
 
-    public static function notNull()
+    public static function cardsValidation()
     {
         return [
-            'evidence' => v::stringType()->length(1, 45),
-            'name' => v::stringType()->length(1, 128),
-            'name_en' => v::stringType()->length(1, 128),
-            'name_es' => v::stringType()->length(1, 128),
-            'name_fr' => v::stringType()->length(1, 128),
-            'score' => v::stringType()->length(1, 255),
-            'who_visible' => v::boolType()
+        'id' => v::intType()->min(1),
+        'Deck_ID' => v::intType()->min(1),
+        'Atribute01' => v::stringType()->length(3, 255),
+        'Atribute02' => v::stringType()->length(3, 255),
+        'Atribute04' => v::stringType()->length(3, 255),
+        'Atribute05' => v::stringType()->length(3, 255),
+        'image' => v::stringType(),
+        'Score01' => v::intType()->between(1, 100);
+        'Score02' => v::intType()->between(1, 100);
+        'Score03' => v::intType()->between(1, 100);
+        'Score04' => v::intType()->between(1, 100);
+        'Score05'=> v::intType()->between(1, 100);
         ];
     }
     
 
-    public static function validateUpdateAttitude() {        
-        return [
-            'name' => v::stringType()->length(1, 128),
-            'name_en' =>v::stringType()->length(1, 128),
-            'name_es' =>v::stringType()->length(1, 128),
-            'name_fr' =>v::stringType()->length(1, 128),
-            'public_visible' => v::intType(),
-            'score' => v::intType()->between(0, 45),
-            'who_visible' => v::boolType(),
-            'tip_name' =>v::stringType()->length(0, 255),
-            'tip_name_en' =>v::stringType()->length(0, 255),
-            'tip_name_es' =>v::stringType()->length(0, 255),
-            'tip_name_fr' =>v::stringType()->length(0, 255),
-            'tip_type' =>v::stringType()->length(0, 32),
-            'tip_url' =>v::url(),
-            'tip_url_en' =>v::url(),
-            'tip_url_es' =>v::url(),
-            'tip_url_fr' =>v::url(),
-            'evidence' => v::optional(v::stringType()->length(0, 45))
+    public static function validateUpdateCards() {        
+        return [        
+        'Atribute01' => v::stringType()->length(3, 255),
+        'Atribute02' => v::stringType()->length(3, 255),
+        'Atribute04' => v::stringType()->length(3, 255),
+        'Atribute05' => v::stringType()->length(3, 255),
+        'image' => v::stringType(),
+        'Score01' => v::intType()->between(1, 100);
+        'Score02' => v::intType()->between(1, 100);
+        'Score03' => v::intType()->between(1, 100);
+        'Score04' => v::intType()->between(1, 100);
+        'Score05'=> v::intType()->between(1, 100);
         ];
     }
 }
