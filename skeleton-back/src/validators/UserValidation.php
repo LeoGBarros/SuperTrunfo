@@ -3,7 +3,7 @@
 namespace Validation\Adm;
 
 use Respect\Validation\Validator as v;
-use Model\Adm\DeckModel;
+use Model\Adm\UserModel;
 
 /**
  * Validation rules.
