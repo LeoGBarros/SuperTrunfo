@@ -1,66 +1,51 @@
 <?php
 
-namespace Controller;
+namespace Controller\Adm;
 
-class UserController
+use App\Response;
+use Model\Adm\CardModel;
+
+class AdmCardController
 {  
 
-    public function createCard(PsrRequest $request, PsrResponse $response, $args)
-    {
-        
-        $params = $request->getParsedBody() ?? [];
-        $allowed = $request->getAttribute('validators');
-        Validation::clearParams($params, $allowed);        
-         
-        
-        $result = MODALCONTROLER::createUser($params['id'], $params['username'], $params['password'], $params['admin']);   
-        
-        if ($result) {          
-            return Response::ok(Response::TRUE);
-        } else {            
-            return Response::error(Response::ERR_CREATE_ATTITUTE);
-        }
-    }
-
-    public function updateCard(PsrRequest $request, PsrResponse $response, $args)
-    {
-        
-        $params = $request->getParsedBody() ?? [];
-        $allowed = $request->getAttribute('validators');
-        Validation::clearParams($params, $allowed);
-
-        
-        $attitude_type_id = $args['id'] ?? null;
-
-        $currentAttitude = AttitudeController::getType($request, $args, $response);
-
-        $fieldsToUpdate = [];
-
-        $keys = ['name','name_en','name_es','name_fr','public_visible','score','who_visible',
-        'tip_name','tip_name_en','tip_name_es','tip_name_fr','tip_type','tip_url','tip_url_en',
-        'tip_url_es','tip_url_fr','evidence'
-        ];
-
-        foreach ($keys as $key) {
-            if (isset($params[$key]) && $params[$key] !== $currentAttitude[$key]) {
-                $fieldsToUpdate[$key] = $params[$key];
+    public function createCard( $request)
+        {
+            
+            $params = $request->getParsedBody() ?? [];
+            $allowed = $request->getAttribute('validators');
+            Validation::clearParams($params, $allowed);       
+            
+            
+            $result = CardModel::createCard($params ['id'],  $params ['Deck_ID'],$params['name'], $params ['Atribute01'], $params ['Atribute02'], $params ['Atribute03'], $params ['Atribute04'],
+            $params ['Atribute05'], $params ['image'], $params ['Score01'], $params ['Score02'], $params ['Score03'], $params ['Score04'], $params ['Score05']);   
+            
+            if ($result) {          
+                return Response::ok(Response::TRUE);
+            } else {            
+                return Response::error(Response::ERR_CREATE_CARD);
             }
         }
-        $result = AttitudeController::updateAttitude($attitude_type_id, $fieldsToUpdate);
+        public function getCardByID($args){
+            if (($result = CardModel::getCardByID($args['id'])) === null) {
+                return Response::error(Response::ERR_SERVER);
+            }                
+            return Response::ok($result);
+        } 
         
-    }
+        public function getAllCards(){
+            $result = CardModel::getAllCards();
+            if ($result === null) {
+                return Response::error(Response::ERR_SERVER);
+            }                
+            return Response::ok($result);
+        }
 
-    public function getCardByID(PsrRequest $request, PsrResponse $response, $args)
-    {
-        if (($result = Attitude::getTypeAll($args['id'])) === null) return Response::error
-        (Response::ERR_UNKNOWN_ATTITUDE_TYPE);
-        return Response::ok($result);
-    }
+        public function deleteCardByID($args){
+            if (($result = CardModel::deleteCardByID($args['id'])) === null) {
+                return Response::error(Response::ERR_SERVER);
+            }
+            
+            return Response::ok($result);
+        } 
 
-    public function getAllCard(PsrRequest $request, PsrResponse $response, $args)
-    {
-        if (($result = Attitude::getTypeAll($args['id'])) === null) return Response::
-        (Response::ERR_UNKNOWN_ATTITUDE_TYPE);
-        return Response::ok($result);
-    }
 }
