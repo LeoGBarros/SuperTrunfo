@@ -36,4 +36,16 @@ class  UserModel{
     public static function deleteUserByID($User_ID) {
         return DB::run("DELETE FROM user WHERE id = ?", [$User_ID]);
     }
+
+    public static function updateUser($username, $password, $Admin, $deck_select)
+    {
+        return DB::runFR(
+            "UPDATE user
+                SET username = ?, password = ?, Admin = ?, deck_select = ?
+             WHERE id = ?",
+            [
+                $username, $password, $Admin, $deck_select
+            ]
+        );
+    }
 }

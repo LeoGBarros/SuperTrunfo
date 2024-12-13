@@ -11,19 +11,26 @@ class Response
 
     // 400
     const ERR_VALIDATION          = ['status' => 400, 'body' => ['code' => 1000, 'message' => 'One or more fields in the request contains invalid data.', 'fields' => []]];
-    const ERR_CREATE_CARD = ['status' => 400, 'body' => ['code' => 1001, 'message' => 'Error create card.']];
-    const ERR_CREATE_DECK = ['status' => 400, 'body' => ['code' => 1002, 'message' => 'Error create deck.']];
-
+    const ERR_CREATE_CARD         = ['status' => 400, 'body' => ['code' => 1001, 'message' => 'Error create card.']];
+    const ERR_CREATE_DECK         = ['status' => 400, 'body' => ['code' => 1002, 'message' => 'Error create deck.']];
+    const ERR_CREATE_USER         = ['status' => 400, 'body' => ['code' => 1003, 'message' => 'Error create user.']];
+    const ERR_INVALID_ID          = ['status' => 400, 'body' => ['code' => 1004, 'message' => 'Invalid ID provided.']];
+    const NO_FIELDS_UPDATED       = ['status' => 400, 'body' => ['code' => 1005, 'message' => 'No fields were updated.']];
+    const ERR_UPDATE_DECK         = ['status' => 400, 'body' => ['code' => 1006, 'message' => 'Error update deck.']];
+    const ERR_UPDATE_USER         = ['status' => 400, 'body' => ['code' => 1007, 'message' => 'Error update user.']];
+    const ERR_UPDATE_CARD         = ['status' => 400, 'body' => ['code' => 1007, 'message' => 'Error update card.']];
     // 401
     const ERR_UNAUTHORIZED        = ['status' => 401, 'body' => null];
 
     // 404
     const ERR_NOT_FOUND           = ['status' => 404, 'body' => null];
+    const ERR_USER_NOT_FOUND      = ['status' => 404, 'body' => ['code' => 4001, 'message' => 'User not found.']];
+    const ERR_DECK_NOT_FOUND      = ['status' => 404, 'body' => ['code' => 4002, 'message' => 'Deck not found.']];
 
     // 500
-    const ERR_UNKNOWN            = ['status' => 400, 'body' => ['code' => 5000, 'message' => 'Unknown error.']];
-    const ERR_SERVER             = ['status' => 500, 'body' => ['code' => 5000, 'message' => 'Unknown server error.']];
-    const ERR_CREATE_ATTITUTE    = ['status' => 500, 'body' => ['code' => 5002, 'message' => 'Error create Attitute.']];
-    const ERR_UPDATE_ATTITUDE    = ['status' => 500, 'body' => ['code' => 5003, 'message' => 'Error update Attitute.']];
+    const ERR_UNKNOWN             = ['status' => 500, 'body' => ['code' => 5000, 'message' => 'Unknown error.']];
+    const ERR_SERVER              = ['status' => 500, 'body' => ['code' => 5000, 'message' => 'Unknown server error.']];
+    const ERR_UPDATE_DECK         = ['status' => 500, 'body' => ['code' => 5004, 'message' => 'Error update deck.']];
+    const ERR_UPDATE_USER         = ['status' => 500, 'body' => ['code' => 5005, 'message' => 'Error update user.']];
 
 }

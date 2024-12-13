@@ -48,4 +48,46 @@ class AdmCardController
             return Response::ok($result);
         } 
 
+
+        public function updateCard(PsrRequest $request, PsrResponse $response, $args)
+            {
+
+            $params = $request->getParsedBody() ?? [];
+            $allowed = $request->getAttribute('validators');
+            Validation::clearParams($params, $allowed);
+
+            $card_id = $args['id'] ?? null;
+
+            if (!$card_id) {
+                return Response::error(Response::ERR_INVALID_ID);
+            }
+            $currentCard = CardController::getCardById($card_id);
+
+            if (!$currentCard) {
+                return Response::error(Response::ERR_CARD_NOT_FOUND);
+            }
+            $keys = [
+                'name', 'Atribute01', 'Atribute02', 'Atribute03', 
+                'Atribute04', 'Atribute05', 'image', 
+                'Score01', 'Score02', 'Score03', 'Score04', 'Score05'
+            ];
+            $fieldsToUpdate = [];
+            foreach ($keys as $key) {
+                if (isset($params[$key]) && $params[$key] !== $currentCard[$key]) {
+                    $fieldsToUpdate[$key] = $params[$key];
+                }
+            }
+            if (empty($fieldsToUpdate)) {
+                return Response::ok(Response::NO_FIELDS_UPDATED);
+            }
+            $result = CardController::updateCard($card_id, $fieldsToUpdate);
+
+            if ($result) {
+                return Response::ok(Response::TRUE);
+            } else {
+                return Response::error(Response::ERR_UPDATE_CARD);
+            }
+        }
+
+
 }

@@ -37,19 +37,18 @@ class  CardModel{
 
 
 
-    public static function updateAttitude(
-        $id,$name,$name_en,$name_es,$name_fr,$public_visible,$score,$who_visible,$tip_name,
-        $tip_name_en,$tip_name_es,$tip_name_fr,$tip_type,$tip_url,$tip_url_en,$tip_url_es,$tip_url_fr,$evidence
+    public static function updateCard(
+        $name, $Atribute01, $Atribute02,  $Atribute03,  $Atribute04, $Atribute05,  
+        $image,  $Score01, $Score02,  $Score03,  $Score04,  $Score05
     ) {
         return DB::runFR(
-            "UPDATE attitude_type 
-                SET name = ?, name_en = ?, name_es = ?, name_fr = ?, public_visible = ?, score = ?, who_visible = ?, 
-                tip_name = ?, tip_name_en = ?, tip_name_es = ?, tip_name_fr = ?, tip_type = ?, tip_url = ?, tip_url_en = ?, 
-                tip_url_es = ?, tip_url_fr = ?, evidence = ?
+            "UPDATE card 
+                SET name = ?, Atribute01 = ?, Atribute02 = ?,  Atribute03 = ?,  Atribute04 = ?, Atribute05 = ?,  
+        image = ?,  Score01 = ?, Score02 = ?,  Score03 = ?,  Score04 = ?,  Score05 = ?
              WHERE id = ?",
             [
-                $name,$name_en,$name_es,$name_fr,$public_visible,$score,$who_visible,$tip_name,
-                $tip_name_en,$tip_name_es,$tip_name_fr,$tip_type,$tip_url,$tip_url_en,$tip_url_es,$tip_url_fr,$evidence,$id
+                $name, $Atribute01, $Atribute02,  $Atribute03,  $Atribute04, $Atribute05,  
+                $image,  $Score01, $Score02,  $Score03,  $Score04,  $Score05
             ]
         );
     }

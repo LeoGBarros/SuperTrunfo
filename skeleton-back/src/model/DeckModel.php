@@ -30,4 +30,17 @@ class  DeckModel{
     public static function deleteDeckByID($Deck_ID) {
         return DB::run("DELETE FROM deck WHERE id = ?", [$Deck_ID]);
     }
+
+
+    public static function updateDeck($name, $qntd_cards, $disponible)
+    {
+        return DB::runFR(
+            "UPDATE deck
+                SET name = ?, qntd_cards = ?, disponible = ?
+             WHERE id = ?",
+            [
+                $name, $qntd_cards, $disponible
+            ]
+        );
+    }
 }
