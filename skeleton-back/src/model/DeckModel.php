@@ -11,9 +11,9 @@ class DeckModel
     {
        
         $host = 'localhost';
-        $dbName = 'nome_do_banco';
-        $username = 'usuario';
-        $password = 'senha';
+        $dbName = 'supertrunfodb';
+        $username = 'root';
+        $password = 'root';
 
         try {
             $pdo = new PDO("mysql:host=$host;dbname=$dbName", $username, $password);

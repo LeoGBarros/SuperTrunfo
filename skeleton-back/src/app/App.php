@@ -5,6 +5,8 @@ namespace App;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Factory\AppFactory;
+use Route\Router;
+use Slim\Routing\RouteCollectorProxy;
 
 class App
 {
@@ -21,7 +23,9 @@ class App
             $response->getBody()->write("Hello, $name");
             return $response;
         });
-
+        
+        
+       Router::Register($app);
         $app->run();
     }
 }

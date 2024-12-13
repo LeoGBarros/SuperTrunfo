@@ -2,8 +2,12 @@
 
 namespace Controller\Adm;
 
-use App\Response;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
+// use App\Response;
 use Model\Adm\CardModel;
+
+require __DIR__ . '/../../model/CardModel.php';
 
 class AdmCardController
 {  
@@ -32,12 +36,15 @@ class AdmCardController
             return Response::ok($result);
         } 
         
-        public function getAllCards(){
+        public function getAllCards(Request $request, Response $response, array $args){
             $result = CardModel::getAllCards();
             if ($result === null) {
-                return Response::error(Response::ERR_SERVER);
+
+            $response->getBody()->write(json_encode($result));
+            return $response;            
             }                
-            return Response::ok($result);
+            $response->getBody()->write(json_encode($result)); // AJUSTAR ERROS
+            return $response;
         }
 
         public function deleteCardByID($args){

@@ -36,6 +36,23 @@ class RolesMiddleware
             '/^\/?api\/player\/game\/create$/' => ['POST'],
             '/^\/?api\/player\/game\/type$/' => ['POST'],
             '/^\/?api\/player\/game\/type\/[0-9]+$/' => ['GET'],
+
+
+
+
+
+            '/^\/?api\/adm\/cards$/' => ['POST'],
+            '/^\/?api\/adm\/cards$/' => ['PUT'],
+            '/^\/?api\/adm\/cards$/' => ['GET'],            
+            '/^\/?api\/adm\/cards\/[0-9]+$/' => ['GET'],
+            '/^\/?api\/adm\/cards\/[0-9]+$/' => ['DELETE'],
+
+            
+            '/^\/?api\/adm\/deck$/' => ['POST'],
+            '/^\/?api\/adm\/deck$/' => ['PUT'],
+            '/^\/?api\/adm\/deck$/' => ['GET'],            
+            '/^\/?api\/adm\/deck\/[0-9]+$/' => ['GET'],
+            '/^\/?api\/adm\/deck\/[0-9]+$/' => ['DELETE'],
         ],
     ];   
 }

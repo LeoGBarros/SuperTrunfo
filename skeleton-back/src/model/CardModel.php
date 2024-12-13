@@ -11,12 +11,13 @@ class CardModel
     {
         
         $host = 'localhost';
-        $dbName = 'nome_do_banco';
-        $username = 'usuario';
-        $password = 'senha';
+        $port = 3306;
+        $dbName = 'supertrunfodb';
+        $username = 'root';
+        $password = 'root';
 
         try {
-            $pdo = new PDO("mysql:host=$host;dbname=$dbName", $username, $password);
+            $pdo = new PDO("mysql:host=$host;port=$port;dbname=$dbName", $username, $password);
             $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
             return $pdo;
