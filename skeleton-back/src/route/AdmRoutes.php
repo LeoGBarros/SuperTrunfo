@@ -23,7 +23,7 @@ class RoutesAdm
             
             $group->group('/deck', function (RouteCollectorProxy $group) {
                 $group->post('/', \Controller\Adm\AdmDeckController::class . ':createDeck');
-                $group->put('/', \Controller\Adm\AdmDeckController::class . ':updateDeck');
+                $group->put('/{id:[0-9]+}', \Controller\Adm\AdmDeckController::class . ':updateDeck');
                 $group->get('/{id:[0-9]+}', \Controller\Adm\AdmDeckController::class . ':getDeckByID');
                 $group->get('/', \Controller\Adm\AdmDeckController::class . ':getAllDecks');
                 $group->delete('/{id:[0-9]+}', \Controller\Adm\AdmDeckController::class . ':deleteDeckByID');

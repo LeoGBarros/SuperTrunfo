@@ -31,10 +31,10 @@ class AdmDeckController
 
         public function getDeckByID(Request $request, Response $response, array $args){
             if (($result = DeckModel::getDeckByID($args['id'])) === null) {
-                $response->getBody()->write(json_encode($result));
-            return $response;            
+                $response->getBody()->write(json_encode(['error' => 'Cant take select Deck']));
+                return $response->withStatus(400);            
             }                
-            $response->getBody()->write(json_encode($result)); // AJUSTAR ERROS 
+            $response->getBody()->write(json_encode($result)); 
             return $response;
         } 
         
@@ -42,57 +42,64 @@ class AdmDeckController
             $result = DeckModel::getAllDecks();
             if ($result === null) {
 
-                $response->getBody()->write(json_encode($result));
-                return $response;            
+                $response->getBody()->write(json_encode(['error' => 'Cant take all Decks']));
+                return $response->withStatus(400);           
                 }                
-                $response->getBody()->write(json_encode($result)); // AJUSTAR ERROS
+                $response->getBody()->write(json_encode($result)); 
                 return $response;
         }
 
     public function deleteDeckByID(Request $request, Response $response, array $args){
         if (($result = DeckModel::deleteDeckByID($args['id'])) === null) {
-            $response->getBody()->write(json_encode($result));
-            return $response;            
+            $response->getBody()->write(json_encode(['error' => 'Cant delete Deck']));
+                return $response->withStatus(400);            
             }                
-            $response->getBody()->write(json_encode($result)); // AJUSTAR ERROS
+            $response->getBody()->write(json_encode($result)); 
             return $response;
         } 
+    public function updateDeck(Request $request, Response $response, array $args)
+        {
+            $params = json_decode($request->getBody()->getContents(), true) ?? [];
+            $Deck_ID = $args['id'] ?? null;
 
-        public function updateDeck(PsrRequest $request, PsrResponse $response, $args)
-            {                
-                $params = json_decode($request->getBody()->getContents(), true) ?? [];
+            if (!$Deck_ID) {
+                $response->getBody()->write(json_encode(['error' => 'Invalid ID']));
+                return $response->withStatus(400);
+            }
 
-                $Deck_ID = $args['id'] ?? null;
+            $currentDeck = DeckModel::getDeckById($Deck_ID);
 
-                if (!$Deck_ID) {
-                    return Response::error(Response::ERR_INVALID_ID);
-                }
-                $currentDeck = DeckModel::getDeckById($Deck_ID);
+            if (!$currentDeck) {
+                $response->getBody()->write(json_encode(['error' => 'Deck not found']));
+                return $response->withStatus(404);
+            }
 
-                if (!$currentDeck) {
-                    return Response::error(Response::ERR_DECK_NOT_FOUND);
-                }
-                $keys = ['name', 'qntd_cards', 'disponible'];
+            $keys = ['name', 'qntd_cards', 'disponible'];
 
-                $fieldsToUpdate = [];
-                foreach ($keys as $key) {
-                    if (isset($params[$key]) && $params[$key] !== $currentDeck[$key]) {
-                        $fieldsToUpdate[$key] = $params[$key];
-                    }
-                }
-
-                if (empty($fieldsToUpdate)) {
-                    return Response::ok(Response::NO_FIELDS_UPDATED);
-                }
-
-                $result = DeckModel::updateDeck($Deck_ID, $fieldsToUpdate);
-
-                if ($result) {
-                    return Response::ok(Response::TRUE);
-                } else {
-                    return Response::error(Response::ERR_UPDATE_DECK);
+            $fieldsToUpdate = [];
+            foreach ($keys as $key) {
+                if (isset($params[$key]) && $params[$key] !== $currentDeck[$key]) {
+                    $fieldsToUpdate[$key] = $params[$key];
                 }
             }
+
+            if (empty($fieldsToUpdate)) {
+                $response->getBody()->write(json_encode(['message' => 'No fields updated']));
+                return $response->withStatus(200);
+            }
+
+            $result = DeckModel::updateDeck($Deck_ID, $fieldsToUpdate);
+
+            if ($result) {
+                $response->getBody()->write(json_encode(['success' => true]));
+                return $response->withStatus(200);
+            } else {
+                $response->getBody()->write(json_encode(['error' => 'Failed to update deck']));
+                return $response->withStatus(500);
+            }
+        }
+
+        
 
 
 }

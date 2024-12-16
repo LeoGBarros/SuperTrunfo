@@ -16,8 +16,7 @@ class AdmCardController
         {
             
             $params = json_decode($request->getBody()->getContents(), true) ?? [];
-
-
+            
             $result = CardModel::createCard($params['id'],  $params['Deck_ID'],$params['name'], $params['Atribute01'], $params['Atribute02'], $params['Atribute03'], $params['Atribute04'],
             $params['Atribute05'], $params['image'], $params['Score01'], $params['Score02'], $params['Score03'], $params['Score04'], $params['Score05']);   
                     
@@ -62,43 +61,52 @@ class AdmCardController
         } 
 
 
-        public function updateCard(PsrRequest $request, PsrResponse $response, $args)
-            {
-
+        public function updateCard(Request $request, Response $response, array $args)
+        {
             $params = json_decode($request->getBody()->getContents(), true) ?? [];
+            $Card_ID = $args['id'] ?? null;
 
-            $id = $args['id'] ?? null;
-
-            if (!$id) {
-                return Respostas::error(Respostas::ERR_INVALID_ID);
+            if (!$Card_ID) {
+                $response->getBody()->write(json_encode(['error' => 'Invalid ID']));
+                return $response->withStatus(400);
             }
-            $currentCard = CardModel::getCardById($id);
+
+            $currentCard = CardModel::getCardById($Card_ID);
 
             if (!$currentCard) {
-                return Respostas::error(Respostas::ERR_CARD_NOT_FOUND);
+                $response->getBody()->write(json_encode(['error' => 'Card not found']));
+                return $response->withStatus(404);
             }
+
             $keys = [
                 'name', 'Atribute01', 'Atribute02', 'Atribute03', 
                 'Atribute04', 'Atribute05', 'image', 
                 'Score01', 'Score02', 'Score03', 'Score04', 'Score05'
             ];
+
             $fieldsToUpdate = [];
             foreach ($keys as $key) {
                 if (isset($params[$key]) && $params[$key] !== $currentCard[$key]) {
                     $fieldsToUpdate[$key] = $params[$key];
                 }
             }
+
             if (empty($fieldsToUpdate)) {
-                return Respostas::ok(Respostas::NO_FIELDS_UPDATED);
+                $response->getBody()->write(json_encode(['message' => 'No fields updated']));
+                return $response->withStatus(200);
             }
-            $result = CardModel::updateCard($card_id, $fieldsToUpdate);
+
+            $result = CardModel::updateCard($Card_ID, $fieldsToUpdate);
 
             if ($result) {
-                return Respostas::ok(Respostas::TRUE);
+                $response->getBody()->write(json_encode(['success' => true]));
+                return $response->withStatus(200);
             } else {
-                return Respostas::error(Respostas::ERR_UPDATE_CARD);
+                $response->getBody()->write(json_encode(['error' => 'Failed to update card']));
+                return $response->withStatus(500);
             }
         }
+
 
 
 }

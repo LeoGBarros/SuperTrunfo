@@ -76,15 +76,20 @@ class DeckModel
         }
     }
 
-    public static function updateDeck($id, $name, $qntd_cards, $disponible)
+    public static function updateDeck($id, array $fieldsToUpdate)
     {
-        $sql = "UPDATE deck SET name = ?, qntd_cards = ?, disponible = ? WHERE id = ?";
+        $setClause = implode(', ', array_map(fn($key) => "$key = ?", array_keys($fieldsToUpdate)));
+        $sql = "UPDATE deck SET $setClause WHERE id = ?";
+        
         try {
             $pdo = self::connect();
             $stmt = $pdo->prepare($sql);
-            return $stmt->execute([$name, $qntd_cards, $disponible, $id]);
+            $values = array_values($fieldsToUpdate);
+            $values[] = $id; 
+            return $stmt->execute($values);
         } catch (PDOException $e) {
             die('Erro ao atualizar deck: ' . $e->getMessage());
         }
     }
+
 }

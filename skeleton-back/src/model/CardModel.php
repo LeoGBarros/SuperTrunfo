@@ -87,23 +87,20 @@ class CardModel
         }
     }
 
-    public static function updateCard(
-        $id, $name, $Atribute01, $Atribute02, $Atribute03, $Atribute04, $Atribute05,
-        $image, $Score01, $Score02, $Score03, $Score04, $Score05
-    ) {
-        $sql = "UPDATE card 
-                SET name = ?, Atribute01 = ?, Atribute02 = ?, Atribute03 = ?, Atribute04 = ?, Atribute05 = ?, 
-                    image = ?, Score01 = ?, Score02 = ?, Score03 = ?, Score04 = ?, Score05 = ? 
-                WHERE id = ?";
+    public static function updateCard($id, array $fieldsToUpdate)
+    {
+        $setClause = implode(', ', array_map(fn($key) => "$key = ?", array_keys($fieldsToUpdate)));
+        $sql = "UPDATE card SET $setClause WHERE id = ?";
+    
         try {
             $pdo = self::connect();
             $stmt = $pdo->prepare($sql);
-            return $stmt->execute([
-                $name, $Atribute01, $Atribute02, $Atribute03, $Atribute04, $Atribute05,
-                $image, $Score01, $Score02, $Score03, $Score04, $Score05, $id
-            ]);
+            $values = array_values($fieldsToUpdate);
+            $values[] = $id; 
+            return $stmt->execute($values);
         } catch (PDOException $e) {
             die('Erro ao atualizar card: ' . $e->getMessage());
         }
     }
+    
 }
