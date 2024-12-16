@@ -4,7 +4,7 @@ namespace Controller\Adm;
 
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
-// use App\Response;
+use App\Respostas;
 use Model\Adm\CardModel;
 
 require __DIR__ . '/../../model/CardModel.php';
@@ -12,28 +12,33 @@ require __DIR__ . '/../../model/CardModel.php';
 class AdmCardController
 {  
 
-    public function createCard( $request)
+    public function createCard( Request $request, Response $response, array $args)
         {
             
-            $params = $request->getParsedBody() ?? [];
-            $allowed = $request->getAttribute('validators');
-            Validation::clearParams($params, $allowed);       
+            $params = json_decode($request->getBody()->getContents(), true) ?? [];
+
+
+            $result = CardModel::createCard($params['id'],  $params['Deck_ID'],$params['name'], $params['Atribute01'], $params['Atribute02'], $params['Atribute03'], $params['Atribute04'],
+            $params['Atribute05'], $params['image'], $params['Score01'], $params['Score02'], $params['Score03'], $params['Score04'], $params['Score05']);   
+                    
             
-            
-            $result = CardModel::createCard($params ['id'],  $params ['Deck_ID'],$params['name'], $params ['Atribute01'], $params ['Atribute02'], $params ['Atribute03'], $params ['Atribute04'],
-            $params ['Atribute05'], $params ['image'], $params ['Score01'], $params ['Score02'], $params ['Score03'], $params ['Score04'], $params ['Score05']);   
-            
-            if ($result) {          
-                return Response::ok(Response::TRUE);
-            } else {            
-                return Response::error(Response::ERR_CREATE_CARD);
-            }
+            if ($result === null) {
+
+                $response->getBody()->write(json_encode($result));
+                return $response;            
+                }                
+                $response->getBody()->write(json_encode($result)); // AJUSTAR ERROS
+                return $response;
         }
-        public function getCardByID($args){
+
+
+        public function getCardByID(Request $request, Response $response, array $args){
             if (($result = CardModel::getCardByID($args['id'])) === null) {
-                return Response::error(Response::ERR_SERVER);
+                $response->getBody()->write(json_encode($result));
+            return $response;            
             }                
-            return Response::ok($result);
+            $response->getBody()->write(json_encode($result)); // AJUSTAR ERROS 
+            return $response;
         } 
         
         public function getAllCards(Request $request, Response $response, array $args){
@@ -47,31 +52,30 @@ class AdmCardController
             return $response;
         }
 
-        public function deleteCardByID($args){
+        public function deleteCardByID(Request $request, Response $response, array $args){
             if (($result = CardModel::deleteCardByID($args['id'])) === null) {
-                return Response::error(Response::ERR_SERVER);
-            }
-            
-            return Response::ok($result);
+                $response->getBody()->write(json_encode($result));
+                return $response;            
+                }                
+                $response->getBody()->write(json_encode($result)); // AJUSTAR ERROS
+                return $response;
         } 
 
 
         public function updateCard(PsrRequest $request, PsrResponse $response, $args)
             {
 
-            $params = $request->getParsedBody() ?? [];
-            $allowed = $request->getAttribute('validators');
-            Validation::clearParams($params, $allowed);
+            $params = json_decode($request->getBody()->getContents(), true) ?? [];
 
-            $card_id = $args['id'] ?? null;
+            $id = $args['id'] ?? null;
 
-            if (!$card_id) {
-                return Response::error(Response::ERR_INVALID_ID);
+            if (!$id) {
+                return Respostas::error(Respostas::ERR_INVALID_ID);
             }
-            $currentCard = CardController::getCardById($card_id);
+            $currentCard = CardModel::getCardById($id);
 
             if (!$currentCard) {
-                return Response::error(Response::ERR_CARD_NOT_FOUND);
+                return Respostas::error(Respostas::ERR_CARD_NOT_FOUND);
             }
             $keys = [
                 'name', 'Atribute01', 'Atribute02', 'Atribute03', 
@@ -85,14 +89,14 @@ class AdmCardController
                 }
             }
             if (empty($fieldsToUpdate)) {
-                return Response::ok(Response::NO_FIELDS_UPDATED);
+                return Respostas::ok(Respostas::NO_FIELDS_UPDATED);
             }
-            $result = CardController::updateCard($card_id, $fieldsToUpdate);
+            $result = CardModel::updateCard($card_id, $fieldsToUpdate);
 
             if ($result) {
-                return Response::ok(Response::TRUE);
+                return Respostas::ok(Respostas::TRUE);
             } else {
-                return Response::error(Response::ERR_UPDATE_CARD);
+                return Respostas::error(Respostas::ERR_UPDATE_CARD);
             }
         }
 

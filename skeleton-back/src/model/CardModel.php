@@ -27,17 +27,17 @@ class CardModel
     }
 
     public static function createCard(
-        $Deck_ID, $name, $Atribute01, $Atribute02, $Atribute03, $Atribute04, $Atribute05,
+       $id,$Deck_ID, $name, $Atribute01, $Atribute02, $Atribute03, $Atribute04, $Atribute05,
         $image, $Score01, $Score02, $Score03, $Score04, $Score05
     ) {
-        $sql = "INSERT INTO card (Deck_ID, name, Atribute01, Atribute02, Atribute03, Atribute04, Atribute05, 
+        $sql = "INSERT INTO card (id, Deck_ID, name, Atribute01, Atribute02, Atribute03, Atribute04, Atribute05, 
                 image, Score01, Score02, Score03, Score04, Score05) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                VALUES (?,?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try {
             $pdo = self::connect();
             $stmt = $pdo->prepare($sql);
             $stmt->execute([
-                $Deck_ID, $name, $Atribute01, $Atribute02, $Atribute03, $Atribute04, $Atribute05,
+                $id,$Deck_ID, $name, $Atribute01, $Atribute02, $Atribute03, $Atribute04, $Atribute05,
                 $image, $Score01, $Score02, $Score03, $Score04, $Score05
             ]);
             return $pdo->lastInsertId();
@@ -46,7 +46,7 @@ class CardModel
         }
     }
 
-    public static function getCardByID($Card_ID)
+    public static function getCardByID($id)
     {
         $sql = "SELECT id, Deck_ID, name, Atribute01, Atribute02, Atribute03, Atribute04, Atribute05, 
                 image, Score01, Score02, Score03, Score04, Score05 
@@ -54,8 +54,8 @@ class CardModel
         try {
             $pdo = self::connect();
             $stmt = $pdo->prepare($sql);
-            $stmt->execute([$Card_ID]);
-            return $stmt->fetch();
+            $stmt->execute([$id]);
+            return $stmt->fetch(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
             die('Erro ao buscar card por ID: ' . $e->getMessage());
         }
@@ -75,13 +75,13 @@ class CardModel
         }
     }
 
-    public static function deleteCardByID($Card_ID)
+    public static function deleteCardByID($id)
     {
         $sql = "DELETE FROM card WHERE id = ?";
         try {
             $pdo = self::connect();
             $stmt = $pdo->prepare($sql);
-            return $stmt->execute([$Card_ID]);
+            return $stmt->execute([$id]);
         } catch (PDOException $e) {
             die('Erro ao deletar card: ' . $e->getMessage());
         }

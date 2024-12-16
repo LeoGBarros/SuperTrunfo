@@ -11,9 +11,7 @@ class AdmUserController
     public function createUser( $request) //Transformar o valor de Admin(Boolean) para String 
         {
             
-            $params = $request->getParsedBody() ?? [];
-            $allowed = $request->getAttribute('validators');
-            Validation::clearParams($params, $allowed);       
+            $params = json_decode($request->getBody()->getContents(), true) ?? [];    
             
             
             $result = UserModel::createUser($params['username'], $params['password'], $params['Admin'], $params['deck_select']);   
@@ -56,15 +54,14 @@ class AdmUserController
         }
         
         public function updateUser(PsrRequest $request, PsrResponse $response, $args){
-            $params = $request->getParsedBody() ?? [];
-            $allowed = $request->getAttribute('validators');
-            Validation::clearParams($params, $allowed);
+            $params = json_decode($request->getBody()->getContents(), true) ?? [];
+
             $user_id = $args['id'] ?? null;
 
             if (!$user_id) {
                 return Response::error(Response::ERR_INVALID_ID);
             }
-            $currentUser = UserController::getUserById($user_id);
+            $currentUser = UserModel::getUserById($user_id);
 
             if (!$currentUser) {
                 return Response::error(Response::ERR_USER_NOT_FOUND);
@@ -81,7 +78,7 @@ class AdmUserController
             if (empty($fieldsToUpdate)) {
                 return Response::ok(Response::NO_FIELDS_UPDATED);
             }
-            $result = UserController::updateUser($user_id, $fieldsToUpdate);
+            $result = UserModel::updateUser($user_id, $fieldsToUpdate);
 
             if ($result) {
                 return Response::ok(Response::TRUE);

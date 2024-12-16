@@ -2,12 +2,12 @@
 
 namespace App;
 
-class Response
+class Respostas
 {
 
     // 200
-    const TRUE  = ['result' => true];
-    const FALSE = ['result' => false];
+    const TRUE  = ['result' => 'true'];
+    const FALSE = ['result' => 'false'];
 
     // 400
     const ERR_VALIDATION          = ['status' => 400, 'body' => ['code' => 1000, 'message' => 'One or more fields in the request contains invalid data.', 'fields' => []]];
@@ -25,12 +25,39 @@ class Response
     // 404
     const ERR_NOT_FOUND           = ['status' => 404, 'body' => null];
     const ERR_USER_NOT_FOUND      = ['status' => 404, 'body' => ['code' => 4001, 'message' => 'User not found.']];
+    const ERR_CARD_NOT_FOUND      = ['status' => 404, 'body' => ['code' => 4001, 'message' => 'User not found.']];
     const ERR_DECK_NOT_FOUND      = ['status' => 404, 'body' => ['code' => 4002, 'message' => 'Deck not found.']];
 
     // 500
     const ERR_UNKNOWN             = ['status' => 500, 'body' => ['code' => 5000, 'message' => 'Unknown error.']];
     const ERR_SERVER              = ['status' => 500, 'body' => ['code' => 5000, 'message' => 'Unknown server error.']];
-    const ERR_UPDATE_DECK         = ['status' => 500, 'body' => ['code' => 5004, 'message' => 'Error update deck.']];
-    const ERR_UPDATE_USER         = ['status' => 500, 'body' => ['code' => 5005, 'message' => 'Error update user.']];
+
+
+
+    public static function ok(?string $message = null, $data = null){
+        if($message){
+            return [
+                'status' => 'success',
+                'message' => $message,
+                'data' => $data
+            ];
+        }
+        return $data;
+    }
+    public static function error(array $error, ?array $errorFields = null):array{
+        if($errorFields){
+            return [
+                'status' => 'error',
+                'code' => $error['code'],
+                'message' => $error['message'],
+                'errors' => $errorFields
+            ];
+        }
+        return [
+            'status' => 'error',
+            'code' => $error['code'],
+            'message' => $error['message']
+        ];
+    }
 
 }

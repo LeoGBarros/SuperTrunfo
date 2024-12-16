@@ -32,11 +32,12 @@ class DeckModel
             $pdo = self::connect();
             $stmt = $pdo->prepare($sql);
             $stmt->execute([$name, $qntd_cards, $disponible]);
-            return $pdo->lastInsertId();
+            return $pdo->lastInsertId(); // Retorna o ID gerado automaticamente
         } catch (PDOException $e) {
             die('Erro ao criar deck: ' . $e->getMessage());
         }
     }
+
 
     public static function getDeckByID($Deck_ID)
     {
@@ -51,7 +52,7 @@ class DeckModel
         }
     }
 
-    public static function getAll()
+    public static function getAllDecks()
     {
         $sql = "SELECT id, name, qntd_cards, disponible FROM deck";
         try {

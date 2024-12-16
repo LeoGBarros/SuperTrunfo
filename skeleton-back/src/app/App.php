@@ -16,7 +16,7 @@ class App
     public static function run()
     {
         
-        $app = AppFactory::create();
+        $app = AppFactory::create(); 
 
         $app->get('/hello/{name}', function (Request $request, Response $response, array $args) {
             $name = $args['name'];

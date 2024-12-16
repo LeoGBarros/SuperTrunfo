@@ -2,64 +2,72 @@
 
 namespace Controller\Adm;
 
-use App\Response;
+
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
+use App\Respostas;
 use Model\Adm\DeckModel;
+
+require __DIR__ . '/../../model/DeckModel.php';
 
 class AdmDeckController
 {  
  
-    public function createDeck( $request)
-        {
-            
-            $params = $request->getParsedBody() ?? [];
-            $allowed = $request->getAttribute('validators');
-            Validation::clearParams($params, $allowed);       
-            
-            
-            $result = DeckModel::createDeck($params ['id'], $params ['name'], $params ['qntd_cards'], $params['disponible']);   
-            
-            if ($result) {          
-                return Response::ok(Response::TRUE);
-            } else {            
-                return Response::error(Response::ERR_CREATE_DECK);
-            }
-        }
-        public function getDeckByID($args){
-                if (($result = DeckModel::getDeckByID($args['id'])) === null) {
-                    return Response::error(Response::ERR_SERVER);
-                }
-                
-                return Response::ok($result);
-        } 
+    public function createDeck(Request $request, Response $response, array $args)
+    {
+        $params = json_decode($request->getBody()->getContents(), true) ?? [];
         
-        public function getAllDecks(){
-                $result = DeckModel::getAll();
-                if ($result === null) {
-                    return Response::error(Response::ERR_SERVER);
-                }                
-                return Response::ok($result);
+        $result = DeckModel::createDeck($params['name'], $params['qntd_cards'], $params['disponible']);
+
+        if ($result === null) {
+            $response->getBody()->write(json_encode(['error' => 'Erro ao criar deck']));
+            return $response->withStatus(500);
         }
 
-        public function deleteDeckByID($args){
-            if (($result = DeckModel::deleteDeckByID($args['id'])) === null) {
-                return Response::error(Response::ERR_SERVER);
-            }
-            
-            return Response::ok($result);
+        $response->getBody()->write(json_encode(['id' => $result])); 
+        return $response->withHeader('Content-Type', 'application/json')->withStatus(201);
+    }
+
+
+        public function getDeckByID(Request $request, Response $response, array $args){
+            if (($result = DeckModel::getDeckByID($args['id'])) === null) {
+                $response->getBody()->write(json_encode($result));
+            return $response;            
+            }                
+            $response->getBody()->write(json_encode($result)); // AJUSTAR ERROS 
+            return $response;
+        } 
+        
+        public function getAllDecks(Request $request, Response $response, array $args){
+            $result = DeckModel::getAllDecks();
+            if ($result === null) {
+
+                $response->getBody()->write(json_encode($result));
+                return $response;            
+                }                
+                $response->getBody()->write(json_encode($result)); // AJUSTAR ERROS
+                return $response;
+        }
+
+    public function deleteDeckByID(Request $request, Response $response, array $args){
+        if (($result = DeckModel::deleteDeckByID($args['id'])) === null) {
+            $response->getBody()->write(json_encode($result));
+            return $response;            
+            }                
+            $response->getBody()->write(json_encode($result)); // AJUSTAR ERROS
+            return $response;
         } 
 
         public function updateDeck(PsrRequest $request, PsrResponse $response, $args)
             {                
-                $params = $request->getParsedBody() ?? [];
-                $allowed = $request->getAttribute('validators');
-                Validation::clearParams($params, $allowed);
+                $params = json_decode($request->getBody()->getContents(), true) ?? [];
 
-                $deck_id = $args['id'] ?? null;
+                $Deck_ID = $args['id'] ?? null;
 
-                if (!$deck_id) {
+                if (!$Deck_ID) {
                     return Response::error(Response::ERR_INVALID_ID);
                 }
-                $currentDeck = DeckController::getDeckById($deck_id);
+                $currentDeck = DeckModel::getDeckById($Deck_ID);
 
                 if (!$currentDeck) {
                     return Response::error(Response::ERR_DECK_NOT_FOUND);
@@ -77,7 +85,7 @@ class AdmDeckController
                     return Response::ok(Response::NO_FIELDS_UPDATED);
                 }
 
-                $result = DeckController::updateDeck($deck_id, $fieldsToUpdate);
+                $result = DeckModel::updateDeck($Deck_ID, $fieldsToUpdate);
 
                 if ($result) {
                     return Response::ok(Response::TRUE);
