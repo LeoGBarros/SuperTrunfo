@@ -2,70 +2,95 @@
 
 namespace Controller\Adm;
 
-use App\Response;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
+
+// use App\Response;
 use Model\Adm\UserModel;
+
+require __DIR__ . '/../../model/UserModel.php';
 
 class AdmUserController
 {  
 
-    public function createUser( $request) //Transformar o valor de Admin(Boolean) para String 
-        {
+    public function createUser( Request $request, Response $response, array $args) //Transformar o valor de Admin(Boolean) para String 
+    {
             
             $params = json_decode($request->getBody()->getContents(), true) ?? [];    
             
             
             $result = UserModel::createUser($params['username'], $params['password'], $params['Admin'], $params['deck_select']);   
             
-            if ($result) {          
-                return Response::ok(Response::TRUE);
-            } else {            
-                return Response::error(Response::ERR_CREATE_CARD);
-            }
-        }
-        public function getUserByID($args){
+            if ($result === null) {
+
+                $response->getBody()->write(json_encode($result));
+                return $response;            
+                }                
+                $response->getBody()->write(json_encode($result)); // AJUSTAR ERROS
+                return $response;
+    }
+
+        public function getUserByID(Request $request, Response $response, array $args){
             if (($result = UserModel::getUserByID($args['id'])) === null) {
-                return Response::error(Response::ERR_SERVER);
+                $response->getBody()->write(json_encode($result));
+            return $response;            
             }                
-            return Response::ok($result);
+            $response->getBody()->write(json_encode($result)); // AJUSTAR ERROS 
+            return $response;
         } 
         
-        public function getAllUsers(){
+        public function getAllUsers(Request $request, Response $response, array $args){
             $result = UserModel::getAllUsers();
             if ($result === null) {
-                return Response::error(Response::ERR_SERVER);
-            }                
-            return Response::ok($result);
+
+                $response->getBody()->write(json_encode($result));
+                return $response;            
+                }                
+                $response->getBody()->write(json_encode($result)); // AJUSTAR ERROS
+                return $response;
         }
 
-        public function getUserDeck($args){
-            if (($result = UserModel::getUserDeck($args['id'])) === null) {
-                return Response::error(Response::ERR_SERVER);
-            }                
-            return Response::ok($result);
-        } 
-        
+        public function getUserDeck(Request $request, Response $response, array $args)
+        {
+            $deckName = UserModel::getUserDeck($args['id']);
 
-        public function deleteUserByID($args){
-            if (($result = UserModel::deleteUserByID($args['id'])) === null) {
-                return Response::error(Response::ERR_SERVER);
+            if ($deckName === null) {
+                $response->getBody()->write(json_encode(['error' => 'Deck not found for this user']));
+                return $response->withStatus(404);
             }
-            
-            return Response::ok($result);
+
+            $response->getBody()->write(json_encode(['deck_name' => $deckName]));
+            return $response->withStatus(200);
+        }
+
+        
+
+        public function deleteUserByID(Request $request, Response $response, array $args){
+            if (($result = UserModel::deleteUserByID($args['id'])) === null) {
+                $response->getBody()->write(json_encode($result));
+                return $response;            
+                }                
+                $response->getBody()->write(json_encode($result)); // AJUSTAR ERROS
+                return $response;
         }
         
-        public function updateUser(PsrRequest $request, PsrResponse $response, $args){
+        public function updateUser(Request $request, Response $response, array $args)
+        {
             $params = json_decode($request->getBody()->getContents(), true) ?? [];
-
             $user_id = $args['id'] ?? null;
 
             if (!$user_id) {
-                return Response::error(Response::ERR_INVALID_ID);
+                $response->getBody()->write(json_encode(['error' => 'Invalid ID']));
+                return $response->withStatus(400);
             }
+
             $currentUser = UserModel::getUserById($user_id);
 
             if (!$currentUser) {
-                return Response::error(Response::ERR_USER_NOT_FOUND);
+                $response->getBody()->write(json_encode(['error' => 'User not found']));
+                return $response->withStatus(404);
             }
+
             $keys = ['username', 'password', 'Admin', 'deck_select'];
 
             $fieldsToUpdate = [];
@@ -74,17 +99,21 @@ class AdmUserController
                     $fieldsToUpdate[$key] = $params[$key];
                 }
             }
-
             if (empty($fieldsToUpdate)) {
-                return Response::ok(Response::NO_FIELDS_UPDATED);
+                $response->getBody()->write(json_encode(['message' => 'No fields updated']));
+                return $response->withStatus(200);
             }
+
             $result = UserModel::updateUser($user_id, $fieldsToUpdate);
 
             if ($result) {
-                return Response::ok(Response::TRUE);
+                $response->getBody()->write(json_encode(['success' => true]));
+                return $response->withStatus(200);
             } else {
-                return Response::error(Response::ERR_UPDATE_USER);
+                $response->getBody()->write(json_encode(['error' => 'Failed to update user']));
+                return $response->withStatus(500);
             }
         }
+
 
 }

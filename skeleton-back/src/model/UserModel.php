@@ -65,16 +65,25 @@ class UserModel
 
     public static function getUserDeck($User_ID)
     {
-        $sql = "SELECT deck_select FROM user WHERE id = ?";
+        $sql = "
+            SELECT d.name AS deck_name 
+            FROM user u
+            JOIN deck d ON u.deck_select = d.id
+            WHERE u.id = ?
+        ";
+
         try {
             $pdo = self::connect();
             $stmt = $pdo->prepare($sql);
             $stmt->execute([$User_ID]);
-            return $stmt->fetchColumn();
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            return $result ? $result['deck_name'] : null;
         } catch (PDOException $e) {
             die('Erro ao buscar deck do usuário: ' . $e->getMessage());
         }
     }
+
 
     public static function deleteUserByID($User_ID)
     {
@@ -88,15 +97,22 @@ class UserModel
         }
     }
 
-    public static function updateUser($id, $username, $password, $Admin, $deck_select)
+    public static function updateUser($id, array $fieldsToUpdate)
     {
-        $sql = "UPDATE user SET username = ?, password = ?, Admin = ?, deck_select = ? WHERE id = ?";
+        $setClause = implode(', ', array_map(fn($key) => "$key = ?", array_keys($fieldsToUpdate)));
+        $sql = "UPDATE user SET $setClause WHERE id = ?";
+
         try {
             $pdo = self::connect();
             $stmt = $pdo->prepare($sql);
-            return $stmt->execute([$username, $password, $Admin, $deck_select, $id]);
+
+            $values = array_values($fieldsToUpdate);
+            $values[] = $id;
+
+            return $stmt->execute($values);
         } catch (PDOException $e) {
             die('Erro ao atualizar usuário: ' . $e->getMessage());
         }
     }
+
 }
