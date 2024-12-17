@@ -31,12 +31,17 @@ class UserModel
         try {
             $pdo = self::connect();
             $stmt = $pdo->prepare($sql);
-            $stmt->execute([$username, $password, $Admin, $deck_select]);
+    
+            // Criptografa a senha usando password_hash
+            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+    
+            $stmt->execute([$username, $hashedPassword, $Admin, $deck_select]);
             return $pdo->lastInsertId();
         } catch (PDOException $e) {
             die('Erro ao criar usuário: ' . $e->getMessage());
         }
     }
+    
 
     public static function getUserByID($User_ID)
     {
@@ -114,5 +119,34 @@ class UserModel
             die('Erro ao atualizar usuário: ' . $e->getMessage());
         }
     }
+
+
+    public static function loginUser($username, $password)
+    {
+        try {
+            $db = self::connect();
+
+            // Buscar usuário com base no username
+            $query = "SELECT * FROM user WHERE username = :username";
+            $stmt = $db->prepare($query);
+            $stmt->bindParam(':username', $username);
+            $stmt->execute();
+
+            $user = $stmt->fetch();
+
+            // Verifica se o usuário existe e se a senha corresponde
+            if (!$user || !password_verify($password, $user['password'])) {
+                return null; // Usuário não encontrado ou senha incorreta
+            }
+
+            // Retorna os dados do usuário (removendo a senha)
+            unset($user['password']);
+            return $user;
+
+        } catch (PDOException $e) {
+            die('Erro ao tentar login de usuário: ' . $e->getMessage());
+        }
+    }
+
 
 }
