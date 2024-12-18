@@ -17,7 +17,7 @@ class AdmDeckController
     {
         $params = json_decode($request->getBody()->getContents(), true) ?? [];
         
-        $result = DeckModel::createDeck($params['name'], $params['qntd_cards'], $params['disponible']);
+        $result = DeckModel::createDeck($params['name'], $params['disponible'],$params['image'], $params['Atributte01'], $params['Atributte02'], $params['Atributte03'], $params['Atributte04'], $params['Atributte05']);
 
         if ($result === null) {
             $response->getBody()->write(json_encode(['error' => 'Erro ao criar deck']));
@@ -74,7 +74,7 @@ class AdmDeckController
                 return $response->withStatus(404);
             }
 
-            $keys = ['name', 'qntd_cards', 'disponible'];
+            $keys = ['name', 'disponible','image', 'Atributte01', 'Atributte02', 'Atributte03', 'Atributte04', 'Atributte05'];
 
             $fieldsToUpdate = [];
             foreach ($keys as $key) {

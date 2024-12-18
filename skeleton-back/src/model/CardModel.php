@@ -27,18 +27,15 @@ class CardModel
     }
 
     public static function createCard(
-       $id,$Deck_ID, $name, $Atribute01, $Atribute02, $Atribute03, $Atribute04, $Atribute05,
-        $image, $Score01, $Score02, $Score03, $Score04, $Score05
+       $Deck_ID, $name, $image, $Score01, $Score02, $Score03, $Score04, $Score05
     ) {
-        $sql = "INSERT INTO card (id, Deck_ID, name, Atribute01, Atribute02, Atribute03, Atribute04, Atribute05, 
-                image, Score01, Score02, Score03, Score04, Score05) 
-                VALUES (?,?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        $sql = "INSERT INTO card ( Deck_ID, name, image, Score01, Score02, Score03, Score04, Score05) 
+                VALUES (?,?,?, ?, ?, ?, ?, ?)";
         try {
             $pdo = self::connect();
             $stmt = $pdo->prepare($sql);
             $stmt->execute([
-                $id,$Deck_ID, $name, $Atribute01, $Atribute02, $Atribute03, $Atribute04, $Atribute05,
-                $image, $Score01, $Score02, $Score03, $Score04, $Score05
+                $Deck_ID, $name, $image, $Score01, $Score02, $Score03, $Score04, $Score05
             ]);
             return $pdo->lastInsertId();
         } catch (PDOException $e) {
@@ -48,7 +45,7 @@ class CardModel
 
     public static function getCardByID($id)
     {
-        $sql = "SELECT id, Deck_ID, name, Atribute01, Atribute02, Atribute03, Atribute04, Atribute05, 
+        $sql = "SELECT id, Deck_ID, name, 
                 image, Score01, Score02, Score03, Score04, Score05 
                 FROM card WHERE id = ?";
         try {
@@ -63,8 +60,7 @@ class CardModel
 
     public static function getAllCards()
     {
-        $sql = "SELECT id, Deck_ID, name, Atribute01, Atribute02, Atribute03, Atribute04, Atribute05, 
-                image, Score01, Score02, Score03, Score04, Score05 
+        $sql = "SELECT id, Deck_ID, name, image, Score01, Score02, Score03, Score04, Score05 
                 FROM card";
         try {
             $pdo = self::connect();

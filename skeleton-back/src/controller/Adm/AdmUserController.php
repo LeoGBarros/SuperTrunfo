@@ -21,7 +21,7 @@ class AdmUserController
             $params = json_decode($request->getBody()->getContents(), true) ?? [];    
             
             
-            $result = UserModel::createUser($params['username'], $params['password'], $params['Admin'], $params['deck_select']);   
+            $result = UserModel::createUser($params['username'], $params['password'], $params['Admin']);   
             
             if ($result === null) {
 
@@ -50,22 +50,7 @@ class AdmUserController
                 }                
                 $response->getBody()->write(json_encode($result)); // AJUSTAR ERROS
                 return $response;
-        }
-
-        public function getUserDeck(Request $request, Response $response, array $args)
-        {
-            $deckName = UserModel::getUserDeck($args['id']);
-
-            if ($deckName === null) {
-                $response->getBody()->write(json_encode(['error' => 'Deck not found for this user']));
-                return $response->withStatus(404);
-            }
-
-            $response->getBody()->write(json_encode(['deck_name' => $deckName]));
-            return $response->withStatus(200);
-        }
-
-        
+        }        
 
         public function deleteUserByID(Request $request, Response $response, array $args){
             if (($result = UserModel::deleteUserByID($args['id'])) === null) {
@@ -93,7 +78,7 @@ class AdmUserController
                 return $response->withStatus(404);
             }
 
-            $keys = ['username', 'password', 'Admin', 'deck_select'];
+            $keys = ['username', 'password', 'Admin'];
 
             $fieldsToUpdate = [];
             foreach ($keys as $key) {
@@ -154,8 +139,7 @@ class AdmUserController
                     'exp' => $expiration,
                     'user_ID' => $userData['id'],
                     'username' => $userData['username'],
-                    'admin' => $userData['Admin'],
-                    'deck_select' => $userData['deck_select']
+                    'admin' => $userData['Admin']
                 ];
 
                 $jwt = JWT::encode($payload, self::$secretKey, 'HS256');
@@ -166,8 +150,7 @@ class AdmUserController
                     'user' => [
                         'id' => $userData['id'],
                         'username' => $userData['username'],
-                        'admin' => $userData['Admin'],
-                        'deck_select' => $userData['deck_select']
+                        'admin' => $userData['Admin']
                     ],
                     'token_expiration' => date('Y-m-d H:i:s', $expiration)
                 ]));

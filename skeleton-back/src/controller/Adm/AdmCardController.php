@@ -17,8 +17,7 @@ class AdmCardController
             
             $params = json_decode($request->getBody()->getContents(), true) ?? [];
             
-            $result = CardModel::createCard($params['id'],  $params['Deck_ID'],$params['name'], $params['Atribute01'], $params['Atribute02'], $params['Atribute03'], $params['Atribute04'],
-            $params['Atribute05'], $params['image'], $params['Score01'], $params['Score02'], $params['Score03'], $params['Score04'], $params['Score05']);   
+            $result = CardModel::createCard($params['Deck_ID'],$params['name'], $params['image'], $params['Score01'], $params['Score02'], $params['Score03'], $params['Score04'], $params['Score05']);   
                     
             
             if ($result === null) {
@@ -79,9 +78,7 @@ class AdmCardController
             }
 
             $keys = [
-                'name', 'Atribute01', 'Atribute02', 'Atribute03', 
-                'Atribute04', 'Atribute05', 'image', 
-                'Score01', 'Score02', 'Score03', 'Score04', 'Score05'
+                'name', 'image', 'Score01', 'Score02', 'Score03', 'Score04', 'Score05'
             ];
 
             $fieldsToUpdate = [];

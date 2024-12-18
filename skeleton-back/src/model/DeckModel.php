@@ -25,13 +25,13 @@ class DeckModel
         }
     }
 
-    public static function createDeck($name, $qntd_cards, $disponible)
+    public static function createDeck($name, $disponible, $image, $Atributte01, $Atributte02, $Atributte03, $Atributte04, $Atributte05)
     {
-        $sql = "INSERT INTO deck (name, qntd_cards, disponible) VALUES (?, ?, ?)";
+        $sql = "INSERT INTO deck (name, disponible, image, Atributte01,Atributte02,Atributte03,Atributte04,Atributte05) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         try {
             $pdo = self::connect();
             $stmt = $pdo->prepare($sql);
-            $stmt->execute([$name, $qntd_cards, $disponible]);
+            $stmt->execute([$name, $disponible, $image, $Atributte01, $Atributte02, $Atributte03, $Atributte04, $Atributte05]);
             return $pdo->lastInsertId(); // Retorna o ID gerado automaticamente
         } catch (PDOException $e) {
             die('Erro ao criar deck: ' . $e->getMessage());
@@ -41,7 +41,7 @@ class DeckModel
 
     public static function getDeckByID($Deck_ID)
     {
-        $sql = "SELECT id, name, qntd_cards, disponible FROM deck WHERE id = ?";
+        $sql = "SELECT id, name, disponible,image, Atributte01,Atributte02,Atributte03,Atributte04,Atributte05 FROM deck WHERE id = ?";
         try {
             $pdo = self::connect();
             $stmt = $pdo->prepare($sql);
@@ -54,7 +54,7 @@ class DeckModel
 
     public static function getAllDecks()
     {
-        $sql = "SELECT id, name, qntd_cards, disponible FROM deck";
+        $sql = "SELECT id, name, disponible, image, Atributte01,Atributte02,Atributte03,Atributte04,Atributte05 FROM deck";
         try {
             $pdo = self::connect();
             $stmt = $pdo->query($sql);

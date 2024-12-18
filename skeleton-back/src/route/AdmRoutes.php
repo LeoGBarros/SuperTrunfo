@@ -10,7 +10,7 @@ class RoutesAdm
     {
         
         $app->group('/adm', function (RouteCollectorProxy $group) {
-            $group->post('/', \Controller\Adm\AdmUserController::class . ':loginUser');
+            $group->post('/login', \Controller\Adm\AdmUserController::class . ':loginUser');
            
             $group->group('/cards', function (RouteCollectorProxy $group) {
                 $group->post('/', \Controller\Adm\AdmCardController::class . ':createCard');

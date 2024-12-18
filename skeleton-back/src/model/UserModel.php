@@ -25,9 +25,9 @@ class UserModel
         }
     }
 
-    public static function createUser($username, $password, $Admin, $deck_select)
+    public static function createUser($username, $password, $Admin)
     {
-        $sql = "INSERT INTO user (username, password, Admin, deck_select) VALUES (?, ?, ?, ?)";
+        $sql = "INSERT INTO user (username, password, Admin) VALUES (?, ?, ?)";
         try {
             $pdo = self::connect();
             $stmt = $pdo->prepare($sql);
@@ -35,7 +35,7 @@ class UserModel
             // Criptografa a senha usando password_hash
             $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
     
-            $stmt->execute([$username, $hashedPassword, $Admin, $deck_select]);
+            $stmt->execute([$username, $hashedPassword, $Admin]);
             return $pdo->lastInsertId();
         } catch (PDOException $e) {
             die('Erro ao criar usuário: ' . $e->getMessage());
@@ -45,7 +45,7 @@ class UserModel
 
     public static function getUserByID($User_ID)
     {
-        $sql = "SELECT id, username, Admin, deck_select FROM user WHERE id = ?";
+        $sql = "SELECT id, username, Admin FROM user WHERE id = ?";
         try {
             $pdo = self::connect();
             $stmt = $pdo->prepare($sql);
@@ -58,7 +58,7 @@ class UserModel
 
     public static function getAllUsers()
     {
-        $sql = "SELECT id, username, Admin, deck_select FROM user";
+        $sql = "SELECT id, username, Admin FROM user";
         try {
             $pdo = self::connect();
             $stmt = $pdo->query($sql);
@@ -66,28 +66,7 @@ class UserModel
         } catch (PDOException $e) {
             die('Erro ao buscar todos os usuários: ' . $e->getMessage());
         }
-    }
-
-    public static function getUserDeck($User_ID)
-    {
-        $sql = "
-            SELECT d.name AS deck_name 
-            FROM user u
-            JOIN deck d ON u.deck_select = d.id
-            WHERE u.id = ?
-        ";
-
-        try {
-            $pdo = self::connect();
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([$User_ID]);
-            $result = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            return $result ? $result['deck_name'] : null;
-        } catch (PDOException $e) {
-            die('Erro ao buscar deck do usuário: ' . $e->getMessage());
-        }
-    }
+    }    
 
 
     public static function deleteUserByID($User_ID)
