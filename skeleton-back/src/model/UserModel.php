@@ -4,6 +4,8 @@ namespace Model\Adm;
 
 use PDO;
 use PDOException;
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
 
 class UserModel
 {
@@ -67,6 +69,27 @@ class UserModel
             die('Erro ao buscar todos os usuários: ' . $e->getMessage());
         }
     }    
+
+
+    public static function checkAdmin($token)
+    {
+        try {           
+            $secretKey = 'a9b1k87YbOpq3h2Mz8aXvP9wLQZ5R4pJ3cLrV5ZJ5DkRt0jQYzZnM+W8X4Lo0yZp';             
+            $decoded = JWT::decode($token, new Key($secretKey, 'HS256'));
+
+            // error_log('Valor de decoded: ' . var_export($decoded, true)); 
+            
+            if (isset($decoded->admin) && intval($decoded->admin) == 0) {
+                return true;
+            } else {
+                return false; 
+            }
+        } catch (PDOException $e) {        
+            die('Erro ao validar token: ' . $e->getMessage());
+            return false;
+        }
+    }
+
 
 
     public static function deleteUserByID($User_ID)

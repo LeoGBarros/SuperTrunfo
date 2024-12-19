@@ -7,7 +7,9 @@ use Psr\Http\Message\ServerRequestInterface as PsrRequest;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 
 use App\Session;
-use App\Response;
+use App\Respostas;
+use Model\Adm\UserModel;
+use PDOException;
 
 /**
  * Middleware responsável por filtrar a disponibilidade das rotas para os diversos níveis de acesso.
@@ -44,24 +46,38 @@ class RolesMiddleware
 
     public function __invoke(PsrRequest $request, RequestHandler $handler): PsrResponse
     {
-
-
-        $allowed = false;
-        foreach (self::RolesPassthrough[Session::getUserType()] as $pattern => $method) {
-            if (
-                preg_match($pattern, $request->getUri()->getPath()) &&
-                in_array($request->getMethod(), $method)
-            ) {
-                $allowed = true;
+        try {
+            $authHeader = $request->getHeader('Authorization')[0] ?? null;
+    
+            if (!$authHeader || !str_starts_with($authHeader, 'Bearer ')) {
+                return Respostas::error(Respostas::ERR_UNAUTHORIZED);
             }
+    
+            $token = substr($authHeader, 7);
+            $isAdmin = UserModel::checkAdmin($token);
+    
+            // Lógica de autorização baseada em status de administrador
+            $allowed = false;
+            foreach (self::RolesPassthrough[$isAdmin ? 'admin' : 'player'] as $pattern => $method) {
+                if (
+                    preg_match($pattern, $request->getUri()->getPath()) &&
+                    in_array($request->getMethod(), $method)
+                ) {
+                    $allowed = true;
+                    break;
+                }
+            }
+    
+            if (!$allowed) {
+                return Respostas::error(Respostas::ERR_UNKNOWN);
+            }
+    
+            // Continua para o próximo middleware ou handler
+            return $handler->handle($request);
+        } catch (PDOException $e) {
+            return Respostas::error(Respostas::ERR_UNKNOWN);
         }
-
-        if (!$allowed) {
-            return Response::error(Response::ERR_UNAUTHORIZED);
-        }
-
-        $response = $handler->handle($request);
-
-        return $response;
     }
+    
+
 }

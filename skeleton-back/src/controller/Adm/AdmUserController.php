@@ -7,6 +7,7 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Firebase\JWT\JWT;
 // use App\Response;
 use Model\Adm\UserModel;
+use PDOException;
 
 require __DIR__ . '/../../model/UserModel.php';
 
@@ -157,12 +158,43 @@ class AdmUserController
 
                 return $response->withStatus(200);
 
-            } catch (\Exception $e) {
+            } catch (PDOException $e) {
                 $response->getBody()->write(json_encode(['error' => 'Erro interno: ' . $e->getMessage()]));
                 return $response->withStatus(500);
             }
         }
 
+        public function checkAdmin(Request $request, Response $response, array $args): Response
+        {
+            $headers = $request->getHeader('Authorization');
+            $authHeader = $headers[0] ?? null;
+        
+            if (!$authHeader || !str_starts_with($authHeader, 'Bearer ')) {
+                $response->getBody()->write(json_encode(['error' => 'Token JWT ausente ou inválido.']));
+                return $response->withStatus(401)->withHeader('Content-Type', 'application/json');
+            }
+        
+            $token = substr($authHeader, 7);
+        
+            try {
+                
+                $isAdmin = UserModel::checkAdmin($token);               
+                error_log('Valor de isAdmin: ' . var_export($isAdmin, true));        
+                // Cria a mensagem de resposta
+                $message = $isAdmin
+                    ? ['message' => 'Usuário é administrador.', 'userId' => $args['id']]
+                    : ['message' => 'Usuário não é administrador.', 'userId' => $args['id']];
+        
+                $response->getBody()->write(json_encode($message));
+                return $response->withStatus(200)->withHeader('Content-Type', 'application/json');
+            } catch (PDOException $e) {
+                $error = ['error' => 'Erro ao validar o token: ' . $e->getMessage()];
+                $response->getBody()->write(json_encode($error));
+                return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
+            }
+        }
+        
 
-
+        
+        
 }
