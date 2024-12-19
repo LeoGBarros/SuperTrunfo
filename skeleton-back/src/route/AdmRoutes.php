@@ -34,7 +34,6 @@ class RoutesAdm
                 $group->post('/', \Controller\Adm\AdmUserController::class . ':createUser');
                 $group->put('/{id:[0-9]+}', \Controller\Adm\AdmUserController::class . ':updateUser');
                 $group->get('/{id:[0-9]+}', \Controller\Adm\AdmUserController::class . ':getUserByID');
-                $group->get('/{id:[0-9]+}/deck', \Controller\Adm\AdmUserController::class . ':getUserDeck');
                 $group->get('/', \Controller\Adm\AdmUserController::class . ':getAllUsers');
                 $group->delete('/{id:[0-9]+}', \Controller\Adm\AdmUserController::class . ':deleteUserByID');
             });
