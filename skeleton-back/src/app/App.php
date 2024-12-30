@@ -7,6 +7,7 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Factory\AppFactory;
 use Route\Router;
 use Route\RoutesAdm;
+use Route\RoutesPlayer;
 use Slim\Routing\RouteCollectorProxy;
 
 class App
@@ -23,6 +24,7 @@ class App
        Router::Register($app);
 
        new RoutesAdm($app);
+       new RoutesPlayer($app);
         $app->run();
     }
 }

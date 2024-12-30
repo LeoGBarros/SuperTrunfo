@@ -32,7 +32,7 @@ class RolesMiddleware
             '/^\/?api\/adm\/user\/[0-9]+\/?$/' => ['GET', 'DELETE'],
         ],
         'player' => [
-            '/^\/?api\/player\/game\/?$/' => ['POST'],
+            '/^\/?api\/player\/games\/?$/' => ['POST', 'PUT', 'GET'],
         ],
     ]; 
 
