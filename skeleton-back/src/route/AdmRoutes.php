@@ -2,15 +2,17 @@
 
 namespace Route;
 
+use App\Middleware\RolesMiddleware;
 use Slim\Routing\RouteCollectorProxy;
+
 
 class RoutesAdm
 {
     public function __construct($app)
     {
+        $app->post('/login', \Controller\Adm\AdmUserController::class . ':loginUser');
         
-        $app->group('/adm', function (RouteCollectorProxy $group) {
-            $group->post('/login', \Controller\Adm\AdmUserController::class . ':loginUser');
+        $app->group('/adm', function (RouteCollectorProxy $group) {            
            
             $group->group('/cards', function (RouteCollectorProxy $group) {
                 $group->post('/', \Controller\Adm\AdmCardController::class . ':createCard');
@@ -38,6 +40,6 @@ class RoutesAdm
                 $group->get('/checkAdmin/{id:[0-9]+}', \Controller\Adm\AdmUserController::class . ':checkAdmin');
                 $group->delete('/{id:[0-9]+}', \Controller\Adm\AdmUserController::class . ':deleteUserByID');
             });
-        });
+        })->add(new RolesMiddleware());
     }
 }

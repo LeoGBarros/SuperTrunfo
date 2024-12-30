@@ -6,7 +6,7 @@ namespace Controller\Adm;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use App\Respostas;
-use Model\Adm\DeckModel;
+use Model\DeckModel;
 
 require __DIR__ . '/../../model/DeckModel.php';
 

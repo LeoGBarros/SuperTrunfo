@@ -5,7 +5,7 @@ namespace Controller\Adm;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use App\Respostas;
-use Model\Adm\CardModel;
+use Model\CardModel;
 
 require __DIR__ . '/../../model/CardModel.php';
 

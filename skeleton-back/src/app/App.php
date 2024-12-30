@@ -6,6 +6,7 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Factory\AppFactory;
 use Route\Router;
+use Route\RoutesAdm;
 use Slim\Routing\RouteCollectorProxy;
 
 class App
@@ -16,16 +17,12 @@ class App
     public static function run()
     {
         
-        $app = AppFactory::create(); 
-
-        $app->get('/hello/{name}', function (Request $request, Response $response, array $args) {
-            $name = $args['name'];
-            $response->getBody()->write("Hello, $name");
-            return $response;
-        });
+        $app = AppFactory::create();         
         
         
        Router::Register($app);
+
+       new RoutesAdm($app);
         $app->run();
     }
 }

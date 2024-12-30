@@ -1,6 +1,6 @@
 <?php
 
-namespace Model\Adm;
+namespace Model;
 
 use PDO;
 use PDOException;
@@ -73,19 +73,21 @@ class UserModel
 
     public static function checkAdmin($token)
     {
-        try {           
+        try {
             $secretKey = 'a9b1k87YbOpq3h2Mz8aXvP9wLQZ5R4pJ3cLrV5ZJ5DkRt0jQYzZnM+W8X4Lo0yZp';             
             $decoded = JWT::decode($token, new Key($secretKey, 'HS256'));
 
-            // error_log('Valor de decoded: ' . var_export($decoded, true)); 
-            
-            if (isset($decoded->admin) && intval($decoded->admin) == 0) {
-                return true;
-            } else {
-                return false; 
+            // Verifica se o campo "admin" está presente e tem o valor esperado
+            if (isset($decoded->admin) && intval($decoded->admin) === 0) {
+                return true; // Usuário é administrador
             }
-        } catch (PDOException $e) {        
-            die('Erro ao validar token: ' . $e->getMessage());
+
+            return false; // Usuário não é administrador
+        } catch (PDOException $e) {
+            error_log('Token expirado: ' . $e->getMessage());
+            return false; // Ou tome outra ação específica para tokens expirados
+        } catch (PDOException $e) {
+            error_log('Erro ao validar token: ' . $e->getMessage());
             return false;
         }
     }

@@ -6,7 +6,7 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Firebase\JWT\JWT;
 // use App\Response;
-use Model\Adm\UserModel;
+use Model\UserModel;
 use PDOException;
 
 require __DIR__ . '/../../model/UserModel.php';
