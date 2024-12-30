@@ -11,7 +11,7 @@ class RoutesAdm
     public function __construct($app)
     {
         $app->post('/login', \Controller\Adm\AdmUserController::class . ':loginUser');
-        
+
         $app->group('/adm', function (RouteCollectorProxy $group) {            
            
             $group->group('/cards', function (RouteCollectorProxy $group) {

@@ -9,7 +9,6 @@ use Firebase\JWT\JWT;
 use Model\UserModel;
 use PDOException;
 
-require __DIR__ . '/../../model/UserModel.php';
 
 class AdmUserController
 {  
@@ -164,35 +163,62 @@ class AdmUserController
             }
         }
 
-        public function checkAdmin(Request $request, Response $response, array $args): Response
-        {
-            $headers = $request->getHeader('Authorization');
-            $authHeader = $headers[0] ?? null;
+    public function checkAdmin(Request $request, Response $response, array $args): Response
+    {
+        // error_log('Iniciando checkAdmin');
         
-            if (!$authHeader || !str_starts_with($authHeader, 'Bearer ')) {
-                $response->getBody()->write(json_encode(['error' => 'Token JWT ausente ou inválido.']));
-                return $response->withStatus(401)->withHeader('Content-Type', 'application/json');
-            }
+        $headers = $request->getHeader('Authorization');
+        $authHeader = $headers[0] ?? null;
+        // error_log('Auth Header: ' . var_export($authHeader, true));
         
-            $token = substr($authHeader, 7);
-        
-            try {
-                
-                $isAdmin = UserModel::checkAdmin($token);               
-                error_log('Valor de isAdmin: ' . var_export($isAdmin, true));        
-                // Cria a mensagem de resposta
-                $message = $isAdmin
-                    ? ['message' => 'Usuário é administrador.', 'userId' => $args['id']]
-                    : ['message' => 'Usuário não é administrador.', 'userId' => $args['id']];
-        
-                $response->getBody()->write(json_encode($message));
-                return $response->withStatus(200)->withHeader('Content-Type', 'application/json');
-            } catch (PDOException $e) {
-                $error = ['error' => 'Erro ao validar o token: ' . $e->getMessage()];
-                $response->getBody()->write(json_encode($error));
-                return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
-            }
+        if (!$authHeader || !str_starts_with($authHeader, 'Bearer ')) {
+            $error = ['error' => 'Token JWT ausente ou inválido.'];
+            // error_log('Erro: ' . json_encode($error));
+            $response->getBody()->write(json_encode($error));
+            return $response->withStatus(401)->withHeader('Content-Type', 'application/json');
         }
+
+        $token = substr($authHeader, 7);
+        // error_log('Token extraído: ' . $token);
+
+        try {
+            $isAdmin = UserModel::checkAdmin($token);
+            // error_log('Valor de isAdmin no controller: ' . var_export($isAdmin, true));
+
+            // Certifique-se de que o $args['id'] está definido
+            $userId = $args['id'] ?? null;
+            // error_log('User ID recebido: ' . var_export($userId, true));
+
+            if (!$userId) {
+                $error = ['error' => 'ID do usuário não fornecido.'];
+                // error_log('Erro: ' . json_encode($error));
+                $response->getBody()->write(json_encode($error));
+                return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+            }
+
+            $message = [
+                'message' => $isAdmin 
+                    ? 'Usuário é administrador.' 
+                    : 'Usuário não é administrador.',
+                'userId' => $userId,
+                'admin' => $isAdmin
+            ];
+
+            // error_log('Mensagem de resposta: ' . json_encode($message));
+
+            $response->getBody()->write(json_encode($message));
+            return $response->withStatus(200)->withHeader('Content-Type', 'application/json');
+
+        } catch (\Throwable $e) {
+            $error = ['error' => 'Erro inesperado: ' . $e->getMessage()];
+            // error_log('Erro inesperado: ' . $e->getMessage());
+            $response->getBody()->write(json_encode($error));
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
+        }
+    }
+
+        
+
         
 
         

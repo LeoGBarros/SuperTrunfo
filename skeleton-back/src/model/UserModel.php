@@ -74,23 +74,24 @@ class UserModel
     public static function checkAdmin($token)
     {
         try {
-            $secretKey = 'a9b1k87YbOpq3h2Mz8aXvP9wLQZ5R4pJ3cLrV5ZJ5DkRt0jQYzZnM+W8X4Lo0yZp';             
+            $secretKey = 'a9b1k87YbOpq3h2Mz8aXvP9wLQZ5R4pJ3cLrV5ZJ5DkRt0jQYzZnM+W8X4Lo0yZp';
+
+            // Decodifica o token JWT
             $decoded = JWT::decode($token, new Key($secretKey, 'HS256'));
+            // error_log('Token decodificado: ' . json_encode($decoded));
 
-            // Verifica se o campo "admin" está presente e tem o valor esperado
-            if (isset($decoded->admin) && intval($decoded->admin) === 0) {
-                return true; // Usuário é administrador
-            }
+            // Verifica se o campo "admin" existe e é igual a 0
+            $isAdmin = isset($decoded->admin) && intval($decoded->admin) === 0;
+            // error_log('Retorno de isAdmin no checkAdmin: ' . var_export($isAdmin, true));
 
-            return false; // Usuário não é administrador
-        } catch (PDOException $e) {
-            error_log('Token expirado: ' . $e->getMessage());
-            return false; // Ou tome outra ação específica para tokens expirados
-        } catch (PDOException $e) {
-            error_log('Erro ao validar token: ' . $e->getMessage());
-            return false;
+            return $isAdmin;
+        } catch (\Exception $e) {
+            error_log('Erro ao decodificar token: ' . $e->getMessage());
+            return false; // Retorna falso em caso de erro
         }
     }
+
+
 
 
 
