@@ -17,7 +17,11 @@ class DeckValidation
         return [
         'id' => v::intType()->min(1),
         'name' => v::stringType()->length(3, 255),
-        'qntd_cards' => v::intType()->equals(30),
+        'Atribute01' => v::stringType()->length(3, 255),
+        'Atribute02' => v::stringType()->length(3, 255),
+        'Atribute03' => v::stringType()->length(3, 255),
+        'Atribute04' => v::stringType()->length(3, 255),
+        'Atribute05' => v::stringType()->length(3, 255),
         'disponible' => v::boolType(),
         ];
     }
@@ -25,8 +29,13 @@ class DeckValidation
 
     public static function validateUpdateDeck() {        
         return [        
-          'name' => v::stringType()->length(3, 255),          
-          'disponible' => v::boolType(),
+        'name' => v::stringType()->length(3, 255),           
+        'Atribute01' => v::stringType()->length(3, 255),
+        'Atribute02' => v::stringType()->length(3, 255),
+        'Atribute03' => v::stringType()->length(3, 255),
+        'Atribute04' => v::stringType()->length(3, 255),
+        'Atribute05' => v::stringType()->length(3, 255),
+        'disponible' => v::boolType(),
         ];
     }
 }

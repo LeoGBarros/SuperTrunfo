@@ -40,21 +40,17 @@ class RolesMiddleware
 
     public function __invoke(PsrRequest $request, RequestHandler $handler): PsrResponse
     {
-        try {
-            // Log do cabeçalho de autorização
+        try {            
             $authHeader = $request->getHeader('Authorization')[0] ?? null;
             // error_log('Auth Header: ' . json_encode($authHeader));
 
             if (!$authHeader || !str_starts_with($authHeader, 'Bearer ')) {
-                // error_log('Authorization header faltando ou invalido');
                 return $this->createErrorResponse(Respostas::ERR_UNAUTHORIZED);
             }
-
-            // Log do token extraído
+            
             $token = substr($authHeader, 7);
             // error_log('Token: ' . $token);
-
-            // Verifica se o usuário é admin
+            
             $isAdmin = UserModel::checkAdmin($token);
             // error_log('Is Admin: ' . ($isAdmin ? 'true' : 'false'));
 
@@ -79,7 +75,6 @@ class RolesMiddleware
 
             $allowed = false;
             foreach ($allowedRoutes as $pattern => $methods) {
-                // error_log('Checking pattern: ' . $pattern . ' with allowed methods: ' . implode(', ', $methods));
                 if (
                     preg_match($pattern, $path) &&
                     in_array($method, $methods)
@@ -99,11 +94,9 @@ class RolesMiddleware
             // error_log('Access granted for path: ' . $path . ' with method: ' . $method);
             return $handler->handle($request);
 
-        } catch (\PDOException $e) {
-            // error_log('Database error: ' . $e->getMessage());
+        } catch (\PDOException $e) {            
             return $this->createErrorResponse(Respostas::ERR_SERVER);
-        } catch (\Exception $e) {
-            // error_log('Unhandled exception: ' . $e->getMessage());
+        } catch (\Exception $e) {            
             return $this->createErrorResponse(Respostas::ERR_SERVER);
         }
     }

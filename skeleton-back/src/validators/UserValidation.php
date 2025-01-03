@@ -18,7 +18,6 @@ class UserValidation
         'id' => v::intType()->min(1),
         'username' => v::stringType()->length(1, 255),
         'password' => v::stringType()->length(1, 255),
-        'deck_select' => v::stringType(),
         'Admin' => v::boolType(),
         ];
     }
@@ -28,7 +27,7 @@ class UserValidation
         return [        
         'username' => v::stringType()->length(1, 255),
         'password' => v::stringType()->length(1, 255),
-        'deck_select' => v::stringType(),
+        'Admin' => v::boolType(),
         ];
     }
 }
