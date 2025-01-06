@@ -13,7 +13,9 @@ class RoutesPlayer
            
             $group->group('/games', function (RouteCollectorProxy $group) {
                 $group->post('/', \Controller\Player\PlayerGameController::class . ':createGame');
+                $group->get('/{session_id:[0-9]+}', \Controller\Player\PlayerGameController::class . ':getCreatedGameByID');
+                $group->get('/', \Controller\Player\PlayerGameController::class . ':getAllCreatedGames');
             });
-        });
+        })->add(new RolesMiddleware());
     }
 }

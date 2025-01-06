@@ -20,10 +20,10 @@ class Respostas
     const ERR_UPDATE_USER         = ['status' => 400, 'body' => ['code' => 1007, 'message' => 'Error update user.']];
     const ERR_UPDATE_CARD         = ['status' => 400, 'body' => ['code' => 1007, 'message' => 'Error update card.']];
     // 401
-    const ERR_UNAUTHORIZED        = ['status' => 401, 'body' => null];
+    const ERR_UNAUTHORIZED        = ['status' => 401, 'body' => ['code' => 401, 'message' => 'User unauthorized.']];
 
     // 404
-    const ERR_NOT_FOUND           = ['status' => 404, 'body' => null];
+    const ERR_NOT_FOUND           = ['status' => 404, 'body' => ['code' => 4001, 'message' => 'Not Found.']];
     const ERR_USER_NOT_FOUND      = ['status' => 404, 'body' => ['code' => 4001, 'message' => 'User not found.']];
     const ERR_CARD_NOT_FOUND      = ['status' => 404, 'body' => ['code' => 4001, 'message' => 'User not found.']];
     const ERR_DECK_NOT_FOUND      = ['status' => 404, 'body' => ['code' => 4002, 'message' => 'Deck not found.']];

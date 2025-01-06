@@ -3,8 +3,9 @@
 namespace Route;
 
 use App\Middleware\RolesMiddleware;
+use Respect\Validation\Validator as v;
 use Slim\Routing\RouteCollectorProxy;
-
+use Validators\CardValidation;
 
 class RoutesAdm
 {
@@ -15,7 +16,7 @@ class RoutesAdm
         $app->group('/adm', function (RouteCollectorProxy $group) {            
            
             $group->group('/cards', function (RouteCollectorProxy $group) {
-                $group->post('/', \Controller\Adm\AdmCardController::class . ':createCard');
+                $group->post('/', \Controller\Adm\AdmCardController::class . ':createCard'); 
                 $group->put('/{id:[0-9]+}', \Controller\Adm\AdmCardController::class . ':updateCard');
                 $group->get('/{id:[0-9]+}', \Controller\Adm\AdmCardController::class . ':getCardByID');
                 $group->get('/', \Controller\Adm\AdmCardController::class . ':getAllCards');

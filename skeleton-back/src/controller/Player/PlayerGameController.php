@@ -29,7 +29,7 @@ class PlayerGameController
     
         try {
             $ownerId = GameModel::getOwnerId($token);
-            error_log('Owner ID extraído: ' . $ownerId);
+            // error_log('Owner ID extraído: ' . $ownerId);
     
             $data = json_decode($request->getBody()->getContents(), true);
             $deckSelect = $data['deck_select'] ?? null;
@@ -61,25 +61,25 @@ class PlayerGameController
     }
     
 
-    // public function getCreatedGameByID(Request $request, Response $response, array $args){
-    //     if (($result = DeckModel::getDeckByID($args['id'])) === null) {
-    //         $response->getBody()->write(json_encode(['error' => 'Cant take select Deck']));
-    //         return $response->withStatus(400);            
-    //     }                
-    //     $response->getBody()->write(json_encode($result)); 
-    //     return $response;
-    // } 
+    public function getCreatedGameByID(Request $request, Response $response, array $args){
+        if (($result = GameModel::getCreatedGameByID($args['session_id'])) === null) {
+            $response->getBody()->write(json_encode(['error' => 'Cant take select Game']));
+            return $response->withStatus(400);            
+        }                
+        $response->getBody()->write(json_encode($result)); 
+        return $response;
+    } 
         
-    // public function getAllCreatedGames(Request $request, Response $response, array $args){
-    //     $result = DeckModel::getAllDecks();
-    //     if ($result === null) {
+    public function getAllCreatedGames(Request $request, Response $response, array $args){
+        $result = GameModel::getAllCreatedGames();
+        if ($result === null) {
 
-    //         $response->getBody()->write(json_encode(['error' => 'Cant take all Decks']));
-    //         return $response->withStatus(400);           
-    //         }                
-    //         $response->getBody()->write(json_encode($result)); 
-    //         return $response;
-    // }
+            $response->getBody()->write(json_encode(['error' => 'Cant take all Games']));
+            return $response->withStatus(400);           
+            }                
+            $response->getBody()->write(json_encode($result)); 
+            return $response;
+    }
 
     // public function deleteCreatedGameID(Request $request, Response $response, array $args){
     //     if (($result = DeckModel::deleteDeckByID($args['id'])) === null) {

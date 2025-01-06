@@ -33,6 +33,8 @@ class RolesMiddleware
         ],
         'player' => [
             '/^\/?api\/player\/games\/?$/' => ['POST', 'PUT', 'GET'],
+            '/^\/?api\/player\/games\/[0-9]+\/?$/' => ['GET', 'DELETE'],
+            
         ],
     ]; 
 
@@ -42,36 +44,34 @@ class RolesMiddleware
     {
         try {            
             $authHeader = $request->getHeader('Authorization')[0] ?? null;
-            // error_log('Auth Header: ' . json_encode($authHeader));
+            //  error_log('Auth Header: ' . json_encode($authHeader));
 
             if (!$authHeader || !str_starts_with($authHeader, 'Bearer ')) {
                 return $this->createErrorResponse(Respostas::ERR_UNAUTHORIZED);
             }
             
             $token = substr($authHeader, 7);
-            // error_log('Token: ' . $token);
-            
+            //  error_log('Token: ' . $token);            
             $isAdmin = UserModel::checkAdmin($token);
-            // error_log('Is Admin: ' . ($isAdmin ? 'true' : 'false'));
-
-            // Identifica o papel do usuário
+            //  error_log('Is Admin: ' . ($isAdmin ? 'true' : 'false'));
+            //  Identifica o papel do usuário
             $role = $isAdmin ? 'admin' : 'player';
             $path = $request->getUri()->getPath();
             $method = $request->getMethod();
 
-            // error_log("Path: $path");
-            // error_log("Method: $method");
-            // error_log("Role: $role");
+            //  error_log("Path: $path");
+            //  error_log("Method: $method");
+            //  error_log("Role: $role");
 
-            // Recupera as permissões do papel
+            //  Recupera as permissões do papel
             $allowedRoutes = self::RolesPassthrough[$role] ?? null;
             if (!$allowedRoutes) {
-                // error_log('RolesPassthrough não definido para o papel: ' . $role);
-                return $this->createErrorResponse(Respostas::ERR_UNKNOWN);
+                //  error_log('RolesPassthrough não definido para o papel: ' . $role);
+                return $this->createErrorResponse(Respostas::ERR_UNAUTHORIZED);
             }
 
-            // Log das permissões configuradas
-            // error_log('Allowed Routes: ' . json_encode($allowedRoutes));
+            //  Log das permissões configuradas
+            //  error_log('Allowed Routes: ' . json_encode($allowedRoutes));
 
             $allowed = false;
             foreach ($allowedRoutes as $pattern => $methods) {
@@ -79,19 +79,19 @@ class RolesMiddleware
                     preg_match($pattern, $path) &&
                     in_array($method, $methods)
                 ) {
-                    // error_log('Pattern matched: ' . $pattern);
+                    //  error_log('Pattern matched: ' . $pattern);
                     $allowed = true;
                     break;
                 }
             }
 
             if (!$allowed) {
-                // error_log('Access denied for path: ' . $path . ' with method: ' . $method);
-                return $this->createErrorResponse(Respostas::ERR_UNKNOWN);
+                //  error_log('Access denied for path: ' . $path . ' with method: ' . $method);
+                return $this->createErrorResponse(Respostas::ERR_UNAUTHORIZED);
             }
 
-            // Log de sucesso antes de passar para o próximo middleware/handler
-            // error_log('Access granted for path: ' . $path . ' with method: ' . $method);
+            //  Log de sucesso antes de passar para o próximo middleware/handler
+            //  error_log('Access granted for path: ' . $path . ' with method: ' . $method);
             return $handler->handle($request);
 
         } catch (\PDOException $e) {            
@@ -100,21 +100,22 @@ class RolesMiddleware
             return $this->createErrorResponse(Respostas::ERR_SERVER);
         }
     }
-
-
     
     /**
      * Método auxiliar para criar respostas de erro.
      */
     private function createErrorResponse(array $error): PsrResponse
-    {
+    {       
         $response = new Response();
-        $statusCode = $error['status'] ?? 500;
-        $body = $error['body'] ? json_encode($error['body']) : '';
-    
+        $statusCode = $error['status'] ?? 500;  //Define um status padrão
+        $body = isset($error['body']) ? json_encode($error['body']) : json_encode(['error' => 'Unknown error']);
+
         $response->getBody()->write($body);
-        return $response->withHeader('Content-Type', 'application/json')->withStatus($statusCode);
+        return $response
+            ->withHeader('Content-Type', 'application/json')
+            ->withStatus($statusCode);
     }
+
     
 
 }

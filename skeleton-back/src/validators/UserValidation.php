@@ -1,6 +1,6 @@
 <?php
 
-namespace Validation\Adm;
+namespace Validators;
 
 use Respect\Validation\Validator as v;
 use Model\Adm\UserModel;

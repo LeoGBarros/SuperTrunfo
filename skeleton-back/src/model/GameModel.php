@@ -77,35 +77,33 @@ class GameModel
             throw new \Exception('Erro ao decodificar token.');
         }
     }
-
-
     
 
 
-    // public static function getDeckByID($Deck_ID)
-    // {
-    //     $sql = "SELECT id, name, disponible,image, Atributte01,Atributte02,Atributte03,Atributte04,Atributte05 FROM deck WHERE id = ?";
-    //     try {
-    //         $pdo = self::connect();
-    //         $stmt = $pdo->prepare($sql);
-    //         $stmt->execute([$Deck_ID]);
-    //         return $stmt->fetch();
-    //     } catch (PDOException $e) {
-    //         die('Erro ao buscar deck por ID: ' . $e->getMessage());
-    //     }
-    // }
+    public static function getCreatedGameByID($session_id )
+    {
+        $sql = "SELECT session_id, owner_id, otherPlayer_id, deck_select, status_game FROM games WHERE session_id  = ?";
+        try {
+            $pdo = self::connect();
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([$session_id ]);
+            return $stmt->fetch();
+        } catch (PDOException $e) {
+            die('Erro ao buscar jogos criados por ID: ' . $e->getMessage());
+        }
+    }
 
-    // public static function getAllDecks()
-    // {
-    //     $sql = "SELECT id, name, disponible, image, Atributte01,Atributte02,Atributte03,Atributte04,Atributte05 FROM deck";
-    //     try {
-    //         $pdo = self::connect();
-    //         $stmt = $pdo->query($sql);
-    //         return $stmt->fetchAll();
-    //     } catch (PDOException $e) {
-    //         die('Erro ao buscar todos os decks: ' . $e->getMessage());
-    //     }
-    // }
+    public static function getAllCreatedGames()
+    {
+        $sql = "SELECT session_id, owner_id, otherPlayer_id, deck_select, status_game FROM games";
+        try {
+            $pdo = self::connect();
+            $stmt = $pdo->query($sql);
+            return $stmt->fetchAll();
+        } catch (PDOException $e) {
+            die('Erro ao buscar todos os jogos criados: ' . $e->getMessage());
+        }
+    }
 
     // public static function deleteDeckByID($Deck_ID)
     // {
