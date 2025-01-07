@@ -105,6 +105,88 @@ class GameModel
         }
     }
 
+
+    public static function joinGame($id, array $fieldsToUpdate)
+    {
+        // Gerar dinamicamente a cláusula SET
+        $setClause = implode(', ', array_map(fn($key) => "$key = :$key", array_keys($fieldsToUpdate)));
+        $sql = "UPDATE games SET $setClause WHERE session_id = :session_id";       
+
+        try {
+            $pdo = self::connect();
+            $stmt = $pdo->prepare($sql);
+
+            // Bind values dinamicamente
+            foreach ($fieldsToUpdate as $key => $value) {
+                $stmt->bindValue(":" . $key, $value);              
+            }
+            $stmt->bindValue(":session_id", $id, PDO::PARAM_INT);           
+
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            die('Error updating game: ' . $e->getMessage());
+        }
+    }
+
+
+    public static function startGame($deckId, $sessionId)
+    {
+        // Conexão com o banco usando PDO
+        try {
+            $pdo = self::connect();
+
+            // Passo 1: Obter IDs das cartas do deck selecionado
+            $query = "SELECT id FROM card WHERE Deck_ID = :deck_id";
+            $stmt = $pdo->prepare($query);
+            $stmt->bindValue(":deck_id", $deckId, PDO::PARAM_INT);
+            $stmt->execute();
+            $cardIds = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+            // Verificar se há cartas suficientes
+            if (count($cardIds) < 2) {
+                throw new PDOException("Não há cartas suficientes para distribuir.");
+            }
+
+            // Passo 2: Embaralhar os IDs
+            shuffle($cardIds);
+
+            // Passo 3: Dividir as cartas entre os jogadores
+            $midpoint = floor(count($cardIds) / 2);
+            $cardPlayer1 = array_slice($cardIds, 0, $midpoint);
+            $cardPlayer2 = array_slice($cardIds, $midpoint);
+
+            // Converter arrays para JSON
+            $fieldsToUpdate = [
+                'cardPlayer1' => json_encode($cardPlayer1),
+                'cardPlayer2' => json_encode($cardPlayer2),
+            ];
+
+            // Passo 4: Gerar dinamicamente a cláusula SET para a consulta de atualização
+            $setClause = implode(', ', array_map(fn($key) => "$key = :$key", array_keys($fieldsToUpdate)));
+            $updateQuery = "UPDATE games SET $setClause WHERE session_id = :session_id";
+
+            $updateStmt = $pdo->prepare($updateQuery);
+
+            // Bind values dinamicamente
+            foreach ($fieldsToUpdate as $key => $value) {
+                $updateStmt->bindValue(":" . $key, $value);
+            }
+            $updateStmt->bindValue(":session_id", $sessionId, PDO::PARAM_INT);
+
+            // Executar a consulta de atualização
+            if ($updateStmt->execute()) {
+                echo "Cartas distribuídas com sucesso para a sessão ID $sessionId!";
+            } else {
+                throw new PDOException("Erro ao atualizar a tabela.");
+            }
+        } catch (PDOException $e) {
+            die('Erro ao iniciar o jogo: ' . $e->getMessage());
+        }
+    }
+
+    
+
+
     // public static function deleteDeckByID($Deck_ID)
     // {
     //     $sql = "DELETE FROM deck WHERE id = ?";
@@ -117,21 +199,7 @@ class GameModel
     //     }
     // }
 
-    // public static function updateDeck($id, array $fieldsToUpdate)
-    // {
-    //     $setClause = implode(', ', array_map(fn($key) => "$key = ?", array_keys($fieldsToUpdate)));
-    //     $sql = "UPDATE deck SET $setClause WHERE id = ?";
-        
-    //     try {
-    //         $pdo = self::connect();
-    //         $stmt = $pdo->prepare($sql);
-    //         $values = array_values($fieldsToUpdate);
-    //         $values[] = $id; 
-    //         return $stmt->execute($values);
-    //     } catch (PDOException $e) {
-    //         die('Erro ao atualizar deck: ' . $e->getMessage());
-    //     }
-    // }
+   
 
 
 

@@ -34,6 +34,7 @@ class RolesMiddleware
         'player' => [
             '/^\/?api\/player\/games\/?$/' => ['POST', 'PUT', 'GET'],
             '/^\/?api\/player\/games\/[0-9]+\/?$/' => ['GET', 'DELETE'],
+            '/^\/?api\/player\/games\/joinGame\/[0-9]+\/?$/' => ['PUT'],
             
         ],
     ]; 
