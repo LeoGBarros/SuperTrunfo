@@ -27,7 +27,8 @@ class DeckModel
 
     public static function createDeck($name, $disponible, $image, $Atributte01, $Atributte02, $Atributte03, $Atributte04, $Atributte05)
     {
-        $sql = "INSERT INTO deck (name, disponible, image, Atributte01,Atributte02,Atributte03,Atributte04,Atributte05) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        $sql = "INSERT INTO deck (name, disponible, image, Atributte01,Atributte02,Atributte03,Atributte04,Atributte05) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         try {
             $pdo = self::connect();
             $stmt = $pdo->prepare($sql);
@@ -41,7 +42,8 @@ class DeckModel
 
     public static function getDeckByID($Deck_ID)
     {
-        $sql = "SELECT id, name, disponible,image, Atributte01,Atributte02,Atributte03,Atributte04,Atributte05 FROM deck WHERE id = ?";
+        $sql = "SELECT id, name, disponible,image, Atributte01,Atributte02,Atributte03,Atributte04,Atributte05 
+        FROM deck WHERE id = ?";
         try {
             $pdo = self::connect();
             $stmt = $pdo->prepare($sql);
@@ -54,7 +56,8 @@ class DeckModel
 
     public static function getAllDecks()
     {
-        $sql = "SELECT id, name, disponible, image, Atributte01,Atributte02,Atributte03,Atributte04,Atributte05 FROM deck";
+        $sql = "SELECT id, name, disponible, image, Atributte01,Atributte02,Atributte03,Atributte04,Atributte05 
+        FROM deck";
         try {
             $pdo = self::connect();
             $stmt = $pdo->query($sql);

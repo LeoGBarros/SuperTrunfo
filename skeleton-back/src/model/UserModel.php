@@ -33,21 +33,24 @@ class UserModel
         try {
             $pdo = self::connect();
             $stmt = $pdo->prepare($sql);
-    
             // Criptografa a senha usando password_hash
             $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-    
-            $stmt->execute([$username, $hashedPassword, $Admin]);
-            return $pdo->lastInsertId();
-        } catch (PDOException $e) {
-            die('Erro ao criar usuário: ' . $e->getMessage());
+            
+            if ($stmt->execute([$username, $hashedPassword, $Admin])) {
+                return $pdo->lastInsertId();
+            }            
+            return false;
+        } catch (PDOException $e) {            
+            return false;
         }
     }
+
     
 
     public static function getUserByID($User_ID)
     {
-        $sql = "SELECT id, username, Admin FROM user WHERE id = ?";
+        $sql = "SELECT id, username, Admin 
+        FROM user WHERE id = ?";
         try {
             $pdo = self::connect();
             $stmt = $pdo->prepare($sql);
@@ -60,7 +63,8 @@ class UserModel
 
     public static function getAllUsers()
     {
-        $sql = "SELECT id, username, Admin FROM user";
+        $sql = "SELECT id, username, Admin 
+        FROM user";
         try {
             $pdo = self::connect();
             $stmt = $pdo->query($sql);
@@ -132,10 +136,10 @@ class UserModel
             $db = self::connect();
 
             // Buscar usuário com base no username
-            $query = "SELECT * FROM user WHERE username = :username";
+            $query = "SELECT id, username, password, Admin 
+                    FROM user WHERE username = ?";
             $stmt = $db->prepare($query);
-            $stmt->bindParam(':username', $username);
-            $stmt->execute();
+            $stmt->execute([$username]);
 
             $user = $stmt->fetch();
 
@@ -144,7 +148,7 @@ class UserModel
                 return null; // Usuário não encontrado ou senha incorreta
             }
 
-            // Retorna os dados do usuário (removendo a senha)
+            // Remove a senha antes de retornar os dados do usuário
             unset($user['password']);
             return $user;
 
@@ -152,6 +156,5 @@ class UserModel
             die('Erro ao tentar login de usuário: ' . $e->getMessage());
         }
     }
-
 
 }

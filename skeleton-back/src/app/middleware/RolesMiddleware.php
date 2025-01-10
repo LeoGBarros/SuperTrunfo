@@ -43,7 +43,14 @@ class RolesMiddleware
 
     public function __invoke(PsrRequest $request, RequestHandler $handler): PsrResponse
     {
-        try {            
+        try {           
+            $path = $request->getUri()->getPath();
+            $method = $request->getMethod();
+            // Permitir acesso sem token para a rota de criação de usuários
+            if ($path === '/api/adm/user/' && strtoupper($method) === 'POST') {
+                return $handler->handle($request);
+            }
+            
             $authHeader = $request->getHeader('Authorization')[0] ?? null;
             //  error_log('Auth Header: ' . json_encode($authHeader));
 
@@ -59,12 +66,11 @@ class RolesMiddleware
             $role = $isAdmin ? 'admin' : 'player';
             $path = $request->getUri()->getPath();
             $method = $request->getMethod();
-
             //  error_log("Path: $path");
             //  error_log("Method: $method");
             //  error_log("Role: $role");
 
-            //  Recupera as permissões do papel
+            //  Recupera as permissões do papel     
             $allowedRoutes = self::RolesPassthrough[$role] ?? null;
             if (!$allowedRoutes) {
                 //  error_log('RolesPassthrough não definido para o papel: ' . $role);

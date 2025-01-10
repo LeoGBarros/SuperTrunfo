@@ -5,7 +5,6 @@ namespace Controller\Adm;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Firebase\JWT\JWT;
-// use App\Response;
 use Model\UserModel;
 use PDOException;
 
@@ -15,7 +14,7 @@ class AdmUserController
 
     private static $secretKey = "a9b1k87YbOpq3h2Mz8aXvP9wLQZ5R4pJ3cLrV5ZJ5DkRt0jQYzZnM+W8X4Lo0yZp";
 
-    public function createUser( Request $request, Response $response, array $args) //Transformar o valor de Admin(Boolean) para String 
+    public function createUser( Request $request, Response $response, array $args)  
     {
             
             $params = json_decode($request->getBody()->getContents(), true) ?? [];    
@@ -23,13 +22,12 @@ class AdmUserController
             
             $result = UserModel::createUser($params['username'], $params['password'], $params['Admin']);   
             
-            if ($result === null) {
-
-                $response->getBody()->write(json_encode($result));
-                return $response;            
+            if ($result === false) {
+                $response->getBody()->write(json_encode(['error' => 'Não foi possivel criar usuario']));
+                return $response->withStatus(400);            
                 }                
-                $response->getBody()->write(json_encode($result)); // AJUSTAR ERROS
-                return $response;
+                $response->getBody()->write(json_encode(['succes' => 'Usuario criado com sucesso']));
+                return $response->withStatus(200);
     }
 
         public function getUserByID(Request $request, Response $response, array $args){

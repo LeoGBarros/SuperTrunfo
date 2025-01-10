@@ -23,29 +23,24 @@ class GameModel
         return $pdo;
     }
 
-    public static function createGame($ownerId, $deckSelect)
+    public static function createGame($owner_id, $deck_select)
     {
         try {
             $pdo = self::connect();
 
             // Verifica se já existe um jogo não iniciado para este owner_id
-            $sqlCheck = "SELECT COUNT(*) FROM games WHERE owner_id = :owner_id AND status_game = 'dont_started'";
+            $sqlCheck = "SELECT COUNT(*) FROM games WHERE owner_id = ? AND status_game = 'dont_started'";
             $stmtCheck = $pdo->prepare($sqlCheck);
-            $stmtCheck->bindParam(':owner_id', $ownerId, PDO::PARAM_INT);
-            $stmtCheck->execute();
+            $stmtCheck->execute ([$owner_id]);
 
             if ($stmtCheck->fetchColumn() > 0) {
                 throw new \Exception('Já existe uma partida criada e não iniciada para este usuário.');
             }
 
             // Cria o jogo
-            $sql = "INSERT INTO games (owner_id, deck_select) VALUES (:owner_id, :deck_select)";
+            $sql = "INSERT INTO games (owner_id, deck_select) VALUES (?, ?)";
             $stmt = $pdo->prepare($sql);
-
-            $stmt->bindParam(':owner_id', $ownerId, PDO::PARAM_INT);
-            $stmt->bindParam(':deck_select', $deckSelect, PDO::PARAM_STR);
-
-            $stmt->execute();
+            $stmt->execute([$owner_id, $deck_select]);
 
             // Retorna o session_id gerado automaticamente
             return $pdo->lastInsertId();
@@ -129,17 +124,15 @@ class GameModel
     }
 
 
-    public static function startGame($deckId, $sessionId)
+    public static function startGame($Deck_ID, $session_id)
     {
-        // Conexão com o banco usando PDO
         try {
             $pdo = self::connect();
 
-            // Passo 1: Obter IDs das cartas do deck selecionado
-            $query = "SELECT id FROM card WHERE Deck_ID = :deck_id";
+            // Passo 1: Buscar os IDs das cartas do baralho
+            $query = "SELECT id FROM card WHERE Deck_ID = ?";
             $stmt = $pdo->prepare($query);
-            $stmt->bindValue(":deck_id", $deckId, PDO::PARAM_INT);
-            $stmt->execute();
+            $stmt->execute([$Deck_ID]);
             $cardIds = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
             // Verificar se há cartas suficientes
@@ -152,30 +145,16 @@ class GameModel
 
             // Passo 3: Dividir as cartas entre os jogadores
             $midpoint = floor(count($cardIds) / 2);
-            $cardPlayer1 = array_slice($cardIds, 0, $midpoint);
-            $cardPlayer2 = array_slice($cardIds, $midpoint);
+            $cardPlayer1 = json_encode(array_slice($cardIds, 0, $midpoint));
+            $cardPlayer2 = json_encode(array_slice($cardIds, $midpoint));
 
-            // Converter arrays para JSON
-            $fieldsToUpdate = [
-                'cardPlayer1' => json_encode($cardPlayer1),
-                'cardPlayer2' => json_encode($cardPlayer2),
-            ];
-
-            // Passo 4: Gerar dinamicamente a cláusula SET para a consulta de atualização
-            $setClause = implode(', ', array_map(fn($key) => "$key = :$key", array_keys($fieldsToUpdate)));
-            $updateQuery = "UPDATE games SET $setClause WHERE session_id = :session_id";
-
+            // Passo 4: Atualizar o jogo com os dados dos jogadores
+            $updateQuery = "UPDATE games SET cardPlayer1 = ?, cardPlayer2 = ? WHERE session_id = ?";
             $updateStmt = $pdo->prepare($updateQuery);
 
-            // Bind values dinamicamente
-            foreach ($fieldsToUpdate as $key => $value) {
-                $updateStmt->bindValue(":" . $key, $value);
-            }
-            $updateStmt->bindValue(":session_id", $sessionId, PDO::PARAM_INT);
-
             // Executar a consulta de atualização
-            if ($updateStmt->execute()) {
-                echo "Cartas distribuídas com sucesso para a sessão ID $sessionId!";
+            if ($updateStmt->execute([$cardPlayer1, $cardPlayer2, $session_id])) {
+                echo "Cartas distribuídas com sucesso para a sessão ID $session_id!";
             } else {
                 throw new PDOException("Erro ao atualizar a tabela.");
             }
@@ -183,6 +162,7 @@ class GameModel
             die('Erro ao iniciar o jogo: ' . $e->getMessage());
         }
     }
+
 
     
 

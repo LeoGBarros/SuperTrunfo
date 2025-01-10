@@ -4,7 +4,6 @@ namespace Controller\Adm;
 
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
-use App\Respostas;
 use Model\CardModel;
 
 require __DIR__ . '/../../model/CardModel.php';
@@ -12,58 +11,79 @@ require __DIR__ . '/../../model/CardModel.php';
 class AdmCardController
 {  
 
-    public function createCard( Request $request, Response $response, array $args)
-        {
-            
-            $params = json_decode($request->getBody()->getContents(), true) ?? [];
-            
-            $result = CardModel::createCard($params['Deck_ID'],$params['name'], $params['image'], $params['Score01'], $params['Score02'], $params['Score03'], $params['Score04'], $params['Score05']);   
-                    
-            
-            if ($result === null) {
+    public function createCard(Request $request, Response $response, array $args)
+    {       
+        $params = json_decode($request->getBody()->getContents(), true) ?? [];
+        
+        $requiredFields = ['Deck_ID', 'name', 'image', 'Score01', 'Score02', 'Score03', 'Score04', 'Score05'];
+        $missingFields = array_diff($requiredFields, array_keys($params));
 
-                $response->getBody()->write(json_encode($result));
-                return $response;            
-                }                
-                $response->getBody()->write(json_encode($result)); // AJUSTAR ERROS
-                return $response;
+        if (!empty($missingFields)) {
+            $response->getBody()->write(json_encode([
+                'error' => 'Necessario preencher todos os campos:',
+                'Campos obrigatórios' => $missingFields
+            ]));
+            return $response->withStatus(400);
         }
+
+       
+        $result = CardModel::createCard(
+            $params['Deck_ID'],
+            $params['name'],
+            $params['image'],
+            $params['Score01'],
+            $params['Score02'],
+            $params['Score03'],
+            $params['Score04'],
+            $params['Score05']
+        );
+        
+        if ($result === false) {
+            $response->getBody()->write(json_encode(['error' => 'Não foi possível criar o cartão']));
+            return $response->withStatus(400);
+        }
+       
+        $response->getBody()->write(json_encode($result));
+        return $response->withStatus(201);
+    }
+
 
 
         public function getCardByID(Request $request, Response $response, array $args){
-            if (($result = CardModel::getCardByID($args['id'])) === null) {
-                $response->getBody()->write(json_encode($result));
-            return $response;            
+            if (($result = CardModel::getCardByID($args['id'])) === false) {
+                $response->getBody()->write(json_encode(['error' => 'Invalid ID']));
+                return $response->withStatus(400);           
             }                
-            $response->getBody()->write(json_encode($result)); // AJUSTAR ERROS 
+            $response->getBody()->write(json_encode($result));  
             return $response;
         } 
         
         public function getAllCards(Request $request, Response $response, array $args){
             $result = CardModel::getAllCards();
-            if ($result === null) {
-
-            $response->getBody()->write(json_encode($result));
-            return $response;            
+            if ($result === false) {
+                $response->getBody()->write(json_encode(['error' => 'Cant take all cards']));
+                return $response->withStatus(400);            
             }                
-            $response->getBody()->write(json_encode($result)); // AJUSTAR ERROS
+            $response->getBody()->write(json_encode($result)); 
             return $response;
         }
 
-        public function deleteCardByID(Request $request, Response $response, array $args){
-            if (($result = CardModel::deleteCardByID($args['id'])) === null) {
-                $response->getBody()->write(json_encode($result));
-                return $response;            
-                }                
-                $response->getBody()->write(json_encode($result)); // AJUSTAR ERROS
-                return $response;
+        public function deleteCardByID(Request $request, Response $response, array $args){ 
+
+            $result = CardModel::deleteCardByID($args['id']);           
+            if ($result === 0) {
+                $response->getBody()->write(json_encode(['error' => 'Invalid ID']));
+                return $response->withStatus(400);            
+            }          
+            $response->getBody()->write(json_encode(['success' => 'Card Deleted with Sucess']));
+            return $response->withStatus(200);   
         } 
 
 
         public function updateCard(Request $request, Response $response, array $args)
         {
             $params = json_decode($request->getBody()->getContents(), true) ?? [];
-            $Card_ID = $args['id'] ?? null;
+            $Card_ID = $args['id'] ?? false;
 
             if (!$Card_ID) {
                 $response->getBody()->write(json_encode(['error' => 'Invalid ID']));

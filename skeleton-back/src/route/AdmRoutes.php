@@ -16,30 +16,40 @@ class RoutesAdm
         $app->group('/adm', function (RouteCollectorProxy $group) {            
            
             $group->group('/cards', function (RouteCollectorProxy $group) {
-                $group->post('/', \Controller\Adm\AdmCardController::class . ':createCard'); 
-                $group->put('/{id:[0-9]+}', \Controller\Adm\AdmCardController::class . ':updateCard');
-                $group->get('/{id:[0-9]+}', \Controller\Adm\AdmCardController::class . ':getCardByID');
+                $group->post('/', \Controller\Adm\AdmCardController::class . ':createCard');
                 $group->get('/', \Controller\Adm\AdmCardController::class . ':getAllCards');
-                $group->delete('/{id:[0-9]+}', \Controller\Adm\AdmCardController::class . ':deleteCardByID');
+            
+                $group->group('/{id:[0-9]+}', function (RouteCollectorProxy $group) {
+                    $group->put('', \Controller\Adm\AdmCardController::class . ':updateCard');
+                    $group->get('', \Controller\Adm\AdmCardController::class . ':getCardByID');
+                    $group->delete('', \Controller\Adm\AdmCardController::class . ':deleteCardByID');
+                });
             });
+            
 
             
             $group->group('/deck', function (RouteCollectorProxy $group) {
                 $group->post('/', \Controller\Adm\AdmDeckController::class . ':createDeck');
-                $group->put('/{id:[0-9]+}', \Controller\Adm\AdmDeckController::class . ':updateDeck');
-                $group->get('/{id:[0-9]+}', \Controller\Adm\AdmDeckController::class . ':getDeckByID');
                 $group->get('/', \Controller\Adm\AdmDeckController::class . ':getAllDecks');
-                $group->delete('/{id:[0-9]+}', \Controller\Adm\AdmDeckController::class . ':deleteDeckByID');
+
+                $group->group('/{id:[0-9]+}', function (RouteCollectorProxy $group){
+                    $group->put('', \Controller\Adm\AdmDeckController::class . ':updateDeck');
+                    $group->get('', \Controller\Adm\AdmDeckController::class . ':getDeckByID');
+                    $group->delete('', \Controller\Adm\AdmDeckController::class . ':deleteDeckByID');
+                });
             });
 
             
             $group->group('/user', function (RouteCollectorProxy $group) {
                 $group->post('/', \Controller\Adm\AdmUserController::class . ':createUser');
-                $group->put('/{id:[0-9]+}', \Controller\Adm\AdmUserController::class . ':updateUser');
-                $group->get('/{id:[0-9]+}', \Controller\Adm\AdmUserController::class . ':getUserByID');
                 $group->get('/', \Controller\Adm\AdmUserController::class . ':getAllUsers');
                 $group->get('/checkAdmin/{id:[0-9]+}', \Controller\Adm\AdmUserController::class . ':checkAdmin');
-                $group->delete('/{id:[0-9]+}', \Controller\Adm\AdmUserController::class . ':deleteUserByID');
+
+                $group->group('/{id:[0-9]+}', function (RouteCollectorProxy $group){
+                    $group->put('', \Controller\Adm\AdmUserController::class . ':updateUser');
+                    $group->get('', \Controller\Adm\AdmUserController::class . ':getUserByID');
+                    $group->delete('', \Controller\Adm\AdmUserController::class . ':deleteUserByID');
+                });
             });
         })->add(new RolesMiddleware());
     }

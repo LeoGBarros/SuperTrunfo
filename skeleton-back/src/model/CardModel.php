@@ -26,17 +26,14 @@ class CardModel
         }
     }
 
-    public static function createCard(
-       $Deck_ID, $name, $image, $Score01, $Score02, $Score03, $Score04, $Score05
-    ) {
-        $sql = "INSERT INTO card ( Deck_ID, name, image, Score01, Score02, Score03, Score04, Score05) 
+    public static function createCard($Deck_ID, $name, $image, $Score01, $Score02, $Score03, $Score04, $Score05)
+    {
+        $sql = "INSERT INTO card (Deck_ID, name, image, Score01, Score02, Score03, Score04, Score05) 
                 VALUES (?,?,?, ?, ?, ?, ?, ?)";
         try {
             $pdo = self::connect();
             $stmt = $pdo->prepare($sql);
-            $stmt->execute([
-                $Deck_ID, $name, $image, $Score01, $Score02, $Score03, $Score04, $Score05
-            ]);
+            $stmt->execute([$Deck_ID, $name, $image, $Score01, $Score02, $Score03, $Score04, $Score05]);
             return $pdo->lastInsertId();
         } catch (PDOException $e) {
             die('Erro ao criar card: ' . $e->getMessage());
@@ -45,8 +42,7 @@ class CardModel
 
     public static function getCardByID($id)
     {
-        $sql = "SELECT id, Deck_ID, name, 
-                image, Score01, Score02, Score03, Score04, Score05 
+        $sql = "SELECT id, Deck_ID, name,image, Score01, Score02, Score03, Score04, Score05 
                 FROM card WHERE id = ?";
         try {
             $pdo = self::connect();
@@ -74,11 +70,13 @@ class CardModel
     public static function deleteCardByID($id)
     {
         $sql = "DELETE FROM card WHERE id = ?";
-        try {
+        try {            
             $pdo = self::connect();
             $stmt = $pdo->prepare($sql);
-            return $stmt->execute([$id]);
-        } catch (PDOException $e) {
+            $stmt->execute([$id]);            
+            
+            return $stmt->rowCount();
+        } catch (PDOException $e) {            
             die('Erro ao deletar card: ' . $e->getMessage());
         }
     }
