@@ -65,7 +65,7 @@ class PlayerGameController
 
     public function getCreatedGameByID(Request $request, Response $response, array $args){
         if (($result = GameModel::getCreatedGameByID($args['session_id'])) === null) {
-            $response->getBody()->write(json_encode(['error' => 'Cant take select Game']));
+            $response->getBody()->write(json_encode(['error' => 'ID invalido']));
             return $response->withStatus(400);            
         }                
         $response->getBody()->write(json_encode($result)); 
@@ -76,7 +76,7 @@ class PlayerGameController
         $result = GameModel::getAllCreatedGames();
         if ($result === null) {
 
-            $response->getBody()->write(json_encode(['error' => 'Cant take all Games']));
+            $response->getBody()->write(json_encode(['error' => 'Não foi possivel pegar todos os jogos']));
             return $response->withStatus(400);           
             }                
             $response->getBody()->write(json_encode($result)); 
@@ -94,7 +94,7 @@ class PlayerGameController
         // Validar se o ID da sessão foi fornecido
         if (!$session_id) {
             // error_log('Invalid Session ID');
-            $response->getBody()->write(json_encode(['error' => 'Invalid Session ID']));
+            $response->getBody()->write(json_encode(['error' => 'Session ID invalido']));
             return $response->withStatus(401)->withHeader('Content-Type', 'application/json');
         }
 
@@ -119,7 +119,7 @@ class PlayerGameController
 
             if (!$user_ID) {
                 // error_log('User unauthorized');
-                $response->getBody()->write(json_encode(['error' => 'User unauthorized.']));
+                $response->getBody()->write(json_encode(['error' => 'Usuario não autorizado.']));
                 return $response->withStatus(401)->withHeader('Content-Type', 'application/json');
             }
 
@@ -129,7 +129,7 @@ class PlayerGameController
 
             if (!$currentGame) {
                 // error_log('Game not found for Session ID: ' . $session_id);
-                $response->getBody()->write(json_encode(['error' => 'Game not found.']));
+                $response->getBody()->write(json_encode(['error' => 'Game não encontrado.']));
                 return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
             }
 
@@ -139,17 +139,20 @@ class PlayerGameController
 
             // Verificar o resultado da atualização
             if ($result) {
-                $response->getBody()->write(json_encode(['success' => true, 'message' => 'Player joined successfully.']));
+                $response->getBody()->write(json_encode(['success' => true, 'message' => 'Player juntou se  com sucesso.']));
                 return $response->withStatus(200)->withHeader('Content-Type', 'application/json');
             } else {
-                $response->getBody()->write(json_encode(['error' => 'Failed to join game.']));
+                $response->getBody()->write(json_encode(['error' => 'Falha ao junta se ao game.']));
                 return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
             }
         } catch (\Exception $e) {
-            $response->getBody()->write(json_encode(['error' => 'Invalid token: ' . $e->getMessage()]));
+            $response->getBody()->write(json_encode(['error' => 'Token invalido: ' . $e->getMessage()]));
             return $response->withStatus(401)->withHeader('Content-Type', 'application/json');
         }
     }
+
+
+    
 
 
     

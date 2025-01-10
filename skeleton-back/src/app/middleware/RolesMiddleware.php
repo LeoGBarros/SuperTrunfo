@@ -41,16 +41,14 @@ class RolesMiddleware
 
 
 
-    public function __invoke(PsrRequest $request, RequestHandler $handler): PsrResponse
-    {
+    public function __invoke(PsrRequest $request, RequestHandler $handler): PsrResponse{
         try {           
             $path = $request->getUri()->getPath();
             $method = $request->getMethod();
             // Permitir acesso sem token para a rota de criação de usuários
             if ($path === '/api/adm/user/' && strtoupper($method) === 'POST') {
                 return $handler->handle($request);
-            }
-            
+            }            
             $authHeader = $request->getHeader('Authorization')[0] ?? null;
             //  error_log('Auth Header: ' . json_encode($authHeader));
 
@@ -96,7 +94,6 @@ class RolesMiddleware
                 //  error_log('Access denied for path: ' . $path . ' with method: ' . $method);
                 return $this->createErrorResponse(Respostas::ERR_UNAUTHORIZED);
             }
-
             //  Log de sucesso antes de passar para o próximo middleware/handler
             //  error_log('Access granted for path: ' . $path . ' with method: ' . $method);
             return $handler->handle($request);
@@ -111,8 +108,7 @@ class RolesMiddleware
     /**
      * Método auxiliar para criar respostas de erro.
      */
-    private function createErrorResponse(array $error): PsrResponse
-    {       
+    private function createErrorResponse(array $error): PsrResponse{       
         $response = new Response();
         $statusCode = $error['status'] ?? 500;  //Define um status padrão
         $body = isset($error['body']) ? json_encode($error['body']) : json_encode(['error' => 'Unknown error']);
@@ -121,8 +117,6 @@ class RolesMiddleware
         return $response
             ->withHeader('Content-Type', 'application/json')
             ->withStatus($statusCode);
-    }
-
-    
+    }   
 
 }

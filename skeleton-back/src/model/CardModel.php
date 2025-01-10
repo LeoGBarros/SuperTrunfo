@@ -7,9 +7,7 @@ use PDOException;
 
 class CardModel
 {
-    private static function connect()
-    {
-        
+    private static function connect(){        
         $host = 'localhost';
         $port = 3306;
         $dbName = 'supertrunfodb';
@@ -26,8 +24,7 @@ class CardModel
         }
     }
 
-    public static function createCard($Deck_ID, $name, $image, $Score01, $Score02, $Score03, $Score04, $Score05)
-    {
+    public static function createCard($Deck_ID, $name, $image, $Score01, $Score02, $Score03, $Score04, $Score05){
         $sql = "INSERT INTO card (Deck_ID, name, image, Score01, Score02, Score03, Score04, Score05) 
                 VALUES (?,?,?, ?, ?, ?, ?, ?)";
         try {
@@ -40,8 +37,7 @@ class CardModel
         }
     }
 
-    public static function getCardByID($id)
-    {
+    public static function getCardByID($id){
         $sql = "SELECT id, Deck_ID, name,image, Score01, Score02, Score03, Score04, Score05 
                 FROM card WHERE id = ?";
         try {
@@ -54,8 +50,7 @@ class CardModel
         }
     }
 
-    public static function getAllCards()
-    {
+    public static function getAllCards(){
         $sql = "SELECT id, Deck_ID, name, image, Score01, Score02, Score03, Score04, Score05 
                 FROM card";
         try {
@@ -67,8 +62,7 @@ class CardModel
         }
     }
 
-    public static function deleteCardByID($id)
-    {
+    public static function deleteCardByID($id){
         $sql = "DELETE FROM card WHERE id = ?";
         try {            
             $pdo = self::connect();
@@ -81,8 +75,7 @@ class CardModel
         }
     }
 
-    public static function updateCard($id, array $fieldsToUpdate)
-    {
+    public static function updateCard($id, array $fieldsToUpdate){
         $setClause = implode(', ', array_map(fn($key) => "$key = ?", array_keys($fieldsToUpdate)));
         $sql = "UPDATE card SET $setClause WHERE id = ?";
     

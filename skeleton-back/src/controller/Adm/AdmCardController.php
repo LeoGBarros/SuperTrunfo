@@ -11,8 +11,7 @@ require __DIR__ . '/../../model/CardModel.php';
 class AdmCardController
 {  
 
-    public function createCard(Request $request, Response $response, array $args)
-    {       
+    public function createCard(Request $request, Response $response, array $args){       
         $params = json_decode($request->getBody()->getContents(), true) ?? [];
         
         $requiredFields = ['Deck_ID', 'name', 'image', 'Score01', 'Score02', 'Score03', 'Score04', 'Score05'];
@@ -46,84 +45,77 @@ class AdmCardController
         $response->getBody()->write(json_encode($result));
         return $response->withStatus(201);
     }
-
-
-
-        public function getCardByID(Request $request, Response $response, array $args){
-            if (($result = CardModel::getCardByID($args['id'])) === false) {
-                $response->getBody()->write(json_encode(['error' => 'Invalid ID']));
-                return $response->withStatus(400);           
-            }                
-            $response->getBody()->write(json_encode($result));  
-            return $response;
-        } 
+    public function getCardByID(Request $request, Response $response, array $args){
+        if (($result = CardModel::getCardByID($args['id'])) === false) {
+            $response->getBody()->write(json_encode(['error' => 'ID invalido']));
+            return $response->withStatus(400);           
+        }                
+        $response->getBody()->write(json_encode($result));  
+        return $response;
+    } 
         
-        public function getAllCards(Request $request, Response $response, array $args){
-            $result = CardModel::getAllCards();
-            if ($result === false) {
-                $response->getBody()->write(json_encode(['error' => 'Cant take all cards']));
-                return $response->withStatus(400);            
-            }                
-            $response->getBody()->write(json_encode($result)); 
-            return $response;
+    public function getAllCards(Request $request, Response $response, array $args){
+        $result = CardModel::getAllCards();
+        if ($result === false) {
+            $response->getBody()->write(json_encode(['error' => 'Não foi possivel pegar todas as cartas']));
+            return $response->withStatus(400);            
+        }                
+        $response->getBody()->write(json_encode($result)); 
+        return $response;
+    }
+
+    public function deleteCardByID(Request $request, Response $response, array $args){
+        $result = CardModel::deleteCardByID($args['id']);           
+        if ($result === 0) {
+            $response->getBody()->write(json_encode(['error' => 'ID invalido']));
+            return $response->withStatus(400);            
+        }          
+        $response->getBody()->write(json_encode(['success' => 'Carta deletada com Sucesso']));
+        return $response->withStatus(200);   
+    } 
+
+
+    public function updateCard(Request $request, Response $response, array $args){
+        $params = json_decode($request->getBody()->getContents(), true) ?? [];
+        $Card_ID = $args['id'] ?? false;
+
+        if (!$Card_ID) {
+            $response->getBody()->write(json_encode(['error' => 'ID invalido']));
+            return $response->withStatus(400);
         }
 
-        public function deleteCardByID(Request $request, Response $response, array $args){ 
+        $currentCard = CardModel::getCardById($Card_ID);
 
-            $result = CardModel::deleteCardByID($args['id']);           
-            if ($result === 0) {
-                $response->getBody()->write(json_encode(['error' => 'Invalid ID']));
-                return $response->withStatus(400);            
-            }          
-            $response->getBody()->write(json_encode(['success' => 'Card Deleted with Sucess']));
-            return $response->withStatus(200);   
-        } 
+        if (!$currentCard) {
+            $response->getBody()->write(json_encode(['error' => 'Carta não encontrada']));
+            return $response->withStatus(404);
+        }
 
+        $keys = [
+            'name', 'image', 'Score01', 'Score02', 'Score03', 'Score04', 'Score05'
+        ];
 
-        public function updateCard(Request $request, Response $response, array $args)
-        {
-            $params = json_decode($request->getBody()->getContents(), true) ?? [];
-            $Card_ID = $args['id'] ?? false;
-
-            if (!$Card_ID) {
-                $response->getBody()->write(json_encode(['error' => 'Invalid ID']));
-                return $response->withStatus(400);
-            }
-
-            $currentCard = CardModel::getCardById($Card_ID);
-
-            if (!$currentCard) {
-                $response->getBody()->write(json_encode(['error' => 'Card not found']));
-                return $response->withStatus(404);
-            }
-
-            $keys = [
-                'name', 'image', 'Score01', 'Score02', 'Score03', 'Score04', 'Score05'
-            ];
-
-            $fieldsToUpdate = [];
-            foreach ($keys as $key) {
-                if (isset($params[$key]) && $params[$key] !== $currentCard[$key]) {
-                    $fieldsToUpdate[$key] = $params[$key];
-                }
-            }
-
-            if (empty($fieldsToUpdate)) {
-                $response->getBody()->write(json_encode(['message' => 'No fields updated']));
-                return $response->withStatus(200);
-            }
-
-            $result = CardModel::updateCard($Card_ID, $fieldsToUpdate);
-
-            if ($result) {
-                $response->getBody()->write(json_encode(['success' => true]));
-                return $response->withStatus(200);
-            } else {
-                $response->getBody()->write(json_encode(['error' => 'Failed to update card']));
-                return $response->withStatus(500);
+        $fieldsToUpdate = [];
+        foreach ($keys as $key) {
+            if (isset($params[$key]) && $params[$key] !== $currentCard[$key]) {
+                $fieldsToUpdate[$key] = $params[$key];
             }
         }
 
+        if (empty($fieldsToUpdate)) {
+            $response->getBody()->write(json_encode(['message' => 'Sem campos para atualizar']));
+            return $response->withStatus(200);
+        }
 
+        $result = CardModel::updateCard($Card_ID, $fieldsToUpdate);
+
+        if ($result) {
+            $response->getBody()->write(json_encode(['success' => true]));
+            return $response->withStatus(200);
+        } else {
+            $response->getBody()->write(json_encode(['error' => 'Falha ao atualizar campos']));
+            return $response->withStatus(500);
+        }
+    }
 
 }

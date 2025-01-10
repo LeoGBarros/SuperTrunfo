@@ -9,8 +9,7 @@ use Firebase\JWT\Key;
 
 class UserModel
 {
-    private static function connect()
-    {
+    private static function connect(){
         
         $host = 'localhost';
         $dbName = 'supertrunfodb';
@@ -27,8 +26,7 @@ class UserModel
         }
     }
 
-    public static function createUser($username, $password, $Admin)
-    {
+    public static function createUser($username, $password, $Admin){
         $sql = "INSERT INTO user (username, password, Admin) VALUES (?, ?, ?)";
         try {
             $pdo = self::connect();
@@ -44,11 +42,9 @@ class UserModel
             return false;
         }
     }
-
     
 
-    public static function getUserByID($User_ID)
-    {
+    public static function getUserByID($User_ID){
         $sql = "SELECT id, username, Admin 
         FROM user WHERE id = ?";
         try {
@@ -61,8 +57,7 @@ class UserModel
         }
     }
 
-    public static function getAllUsers()
-    {
+    public static function getAllUsers(){
         $sql = "SELECT id, username, Admin 
         FROM user";
         try {
@@ -75,8 +70,7 @@ class UserModel
     }    
 
 
-    public static function checkAdmin($token)
-    {
+    public static function checkAdmin($token){
         try {
             $secretKey = 'a9b1k87YbOpq3h2Mz8aXvP9wLQZ5R4pJ3cLrV5ZJ5DkRt0jQYzZnM+W8X4Lo0yZp';
 
@@ -95,12 +89,7 @@ class UserModel
         }
     }
 
-
-
-
-
-    public static function deleteUserByID($User_ID)
-    {
+    public static function deleteUserByID($User_ID){
         $sql = "DELETE FROM user WHERE id = ?";
         try {
             $pdo = self::connect();
@@ -111,8 +100,7 @@ class UserModel
         }
     }
 
-    public static function updateUser($id, array $fieldsToUpdate)
-    {
+    public static function updateUser($id, array $fieldsToUpdate){
         $setClause = implode(', ', array_map(fn($key) => "$key = ?", array_keys($fieldsToUpdate)));
         $sql = "UPDATE user SET $setClause WHERE id = ?";
 
@@ -130,8 +118,7 @@ class UserModel
     }
 
 
-    public static function loginUser($username, $password)
-    {
+    public static function loginUser($username, $password){
         try {
             $db = self::connect();
 

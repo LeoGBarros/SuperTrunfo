@@ -7,8 +7,7 @@ use PDOException;
 
 class DeckModel
 {
-    private static function connect()
-    {
+    private static function connect(){
        
         $host = 'localhost';
         $dbName = 'supertrunfodb';
@@ -25,8 +24,7 @@ class DeckModel
         }
     }
 
-    public static function createDeck($name, $disponible, $image, $Atributte01, $Atributte02, $Atributte03, $Atributte04, $Atributte05)
-    {
+    public static function createDeck($name, $disponible, $image, $Atributte01, $Atributte02, $Atributte03, $Atributte04, $Atributte05){
         $sql = "INSERT INTO deck (name, disponible, image, Atributte01,Atributte02,Atributte03,Atributte04,Atributte05) 
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         try {
@@ -40,8 +38,7 @@ class DeckModel
     }
 
 
-    public static function getDeckByID($Deck_ID)
-    {
+    public static function getDeckByID($Deck_ID){
         $sql = "SELECT id, name, disponible,image, Atributte01,Atributte02,Atributte03,Atributte04,Atributte05 
         FROM deck WHERE id = ?";
         try {
@@ -54,8 +51,7 @@ class DeckModel
         }
     }
 
-    public static function getAllDecks()
-    {
+    public static function getAllDecks(){
         $sql = "SELECT id, name, disponible, image, Atributte01,Atributte02,Atributte03,Atributte04,Atributte05 
         FROM deck";
         try {
@@ -67,8 +63,7 @@ class DeckModel
         }
     }
 
-    public static function deleteDeckByID($Deck_ID)
-    {
+    public static function deleteDeckByID($Deck_ID){
         $sql = "DELETE FROM deck WHERE id = ?";
         try {
             $pdo = self::connect();
@@ -79,8 +74,7 @@ class DeckModel
         }
     }
 
-    public static function updateDeck($id, array $fieldsToUpdate)
-    {
+    public static function updateDeck($id, array $fieldsToUpdate){
         $setClause = implode(', ', array_map(fn($key) => "$key = ?", array_keys($fieldsToUpdate)));
         $sql = "UPDATE deck SET $setClause WHERE id = ?";
         
