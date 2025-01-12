@@ -35,6 +35,10 @@ class RolesMiddleware
             '/^\/?api\/player\/games\/?$/' => ['POST', 'PUT', 'GET'],
             '/^\/?api\/player\/games\/[0-9]+\/?$/' => ['GET', 'DELETE'],
             '/^\/?api\/player\/games\/joinGame\/[0-9]+\/?$/' => ['PUT'],
+            '/^\/?api\/player\/games\/startGame\/[0-9]+\/?$/' => ['PUT'],
+            '/^\/?api\/player\/games\/getFirstCards\/[0-9]+\/?$/' => ['GET'],
+            '/^\/?api\/player\/games\/compareCards\/[0-9]+\/?$/' => ['POST'],
+            '/^\/?api\/player\/games\/gameInformation\/[0-9]+\/?$/' => ['GET'],
             
         ],
     ]; 

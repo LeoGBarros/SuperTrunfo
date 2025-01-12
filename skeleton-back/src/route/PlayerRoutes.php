@@ -16,6 +16,10 @@ class RoutesPlayer
                 $group->get('/{session_id:[0-9]+}', \Controller\Player\PlayerGameController::class . ':getCreatedGameByID');
                 $group->get('/', \Controller\Player\PlayerGameController::class . ':getAllCreatedGames');
                 $group->put('/joinGame/{session_id}', \Controller\Player\PlayerGameController::class . ':joinGame');
+                $group->put('/startGame/{session_id}', \Controller\Player\PlayerGameController::class . ':startGame');
+                $group->get('/getFirstCards/{session_id}', \Controller\Player\PlayerGameController::class . ':getFirstCards');
+                $group->post('/compareCards/{session_id}', \Controller\Player\PlayerGameController::class . ':compareCards');
+                $group->get('/gameInformation/{session_id}', \Controller\Player\PlayerGameController::class . ':gameInformation');
             });
         })->add(new RolesMiddleware());
     }

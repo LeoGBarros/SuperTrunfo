@@ -50,6 +50,24 @@ class CardModel
         }
     }
 
+    public static function getCardsByIDsGameInformation(array $ids) {
+        if (empty($ids)) {
+            return [];
+        }    
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $sql = "SELECT id, Deck_ID, name, image, Score01, Score02, Score03, Score04, Score05 
+                FROM card WHERE id IN ($placeholders)";
+        try {
+            $pdo = self::connect();
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($ids);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            throw new PDOException('Erro ao buscar cartas por IDs: ' . $e->getMessage());
+        }
+    }
+    
+
     public static function getAllCards(){
         $sql = "SELECT id, Deck_ID, name, image, Score01, Score02, Score03, Score04, Score05 
                 FROM card";

@@ -47,14 +47,9 @@ class GameModel
         }
     }
 
-
-
     public static function getOwnerId($token){
         try {
-            $secretKey = 'a9b1k87YbOpq3h2Mz8aXvP9wLQZ5R4pJ3cLrV5ZJ5DkRt0jQYzZnM+W8X4Lo0yZp';
-
-            // Decodifica o token JWT
-            $decoded = JWT::decode($token, new Key($secretKey, 'HS256'));
+            $decoded = JWT::decode($token, new Key('a9b1k87YbOpq3h2Mz8aXvP9wLQZ5R4pJ3cLrV5ZJ5DkRt0jQYzZnM', 'HS256'));
             // error_log('Token decodificado: ' . json_encode($decoded));
 
             // Verifica os campos user_id ou user_ID no token
@@ -68,12 +63,11 @@ class GameModel
         } catch (\Exception $e) {
             throw new \Exception('Erro ao decodificar token.');
         }
-    }
-    
+    }   
 
 
     public static function getCreatedGameByID($session_id ){
-        $sql = "SELECT session_id, owner_id, otherPlayer_id, deck_select, status_game FROM games WHERE session_id  = ?";
+        $sql = "SELECT session_id, owner_id, otherPlayer_id, deck_select, status_game, whose_turn, cardPlayer1, cardPlayer2 FROM games WHERE session_id  = ?";
         try {
             $pdo = self::connect();
             $stmt = $pdo->prepare($sql);
@@ -97,7 +91,6 @@ class GameModel
 
 
     public static function joinGame($id, array $fieldsToUpdate){
-        // Gerar dinamicamente a cláusula SET
         $setClause = implode(', ', array_map(fn($key) => "$key = :$key", array_keys($fieldsToUpdate)));
         $sql = "UPDATE games SET $setClause WHERE session_id = :session_id";       
 
@@ -105,7 +98,6 @@ class GameModel
             $pdo = self::connect();
             $stmt = $pdo->prepare($sql);
 
-            // Bind values dinamicamente
             foreach ($fieldsToUpdate as $key => $value) {
                 $stmt->bindValue(":" . $key, $value);              
             }
@@ -122,42 +114,34 @@ class GameModel
         try {
             $pdo = self::connect();
         
-            // Verificar se há jogadores suficientes
-            $playerQuery = "SELECT owner_id, otherPlayerId FROM games WHERE session_id = ?";
+            $playerQuery = "SELECT owner_id, otherPlayer_id FROM games WHERE session_id = ?";
             $playerStmt = $pdo->prepare($playerQuery);
             $playerStmt->execute([$session_id]);
             $players = $playerStmt->fetch(PDO::FETCH_ASSOC);
         
-            if (empty($players['owner_id']) || empty($players['otherPlayerId'])) {
+            if (empty($players['owner_id']) || empty($players['otherPlayer_id'])) {
                 throw new PDOException("Não há jogadores suficientes para iniciar o jogo.");
             }
         
-            // Passo 1: Buscar os IDs das cartas do baralho
             $query = "SELECT id FROM card WHERE Deck_ID = ?";
             $stmt = $pdo->prepare($query);
             $stmt->execute([$Deck_ID]);
             $cardIds = $stmt->fetchAll(PDO::FETCH_COLUMN);
         
-            // Verificar se há cartas suficientes
             if (count($cardIds) < 2) {
                 throw new PDOException("Não há cartas suficientes para distribuir.");
             }
         
-            // Passo 2: Embaralhar os IDs
             shuffle($cardIds);
         
-            // Passo 3: Dividir as cartas entre os jogadores
             $midpoint = floor(count($cardIds) / 2);
             $cardPlayer1 = json_encode(array_slice($cardIds, 0, $midpoint));
             $cardPlayer2 = json_encode(array_slice($cardIds, $midpoint));
         
-            // Passo 4: Atualizar o jogo com os dados dos jogadores e o status do jogo
             $updateQuery = "UPDATE games SET cardPlayer1 = ?, cardPlayer2 = ?, status_game = 'started' WHERE session_id = ?";
             $updateStmt = $pdo->prepare($updateQuery);
         
-            // Executar a consulta de atualização
             if ($updateStmt->execute([$cardPlayer1, $cardPlayer2, $session_id])) {
-                echo "Cartas distribuídas com sucesso para a sessão ID $session_id!";
             } else {
                 throw new PDOException("Erro ao atualizar a tabela.");
             }
@@ -169,92 +153,118 @@ class GameModel
     public static function getFirstCards($session_id) {
         try {
             $pdo = self::connect();
-
-            // Buscar as cartas dos jogadores
             $query = "SELECT cardPlayer1, cardPlayer2 FROM games WHERE session_id = ?";
             $stmt = $pdo->prepare($query);
             $stmt->execute([$session_id]);
             $cards = $stmt->fetch(PDO::FETCH_ASSOC);
+            error_log("Cartas brutas encontradas: " . json_encode($cards));
 
             if (!$cards) {
                 throw new PDOException("Não foi possível encontrar as cartas para a sessão.");
             }
 
-            // Decodificar as cartas e pegar a primeira de cada jogador
             $cardPlayer1 = json_decode($cards['cardPlayer1'], true);
             $cardPlayer2 = json_decode($cards['cardPlayer2'], true);
 
-            $firstCardPlayer1 = $cardPlayer1[0] ?? null;
-            $firstCardPlayer2 = $cardPlayer2[0] ?? null;
-
-            if (!$firstCardPlayer1 || !$firstCardPlayer2) {
-                throw new PDOException("Um dos jogadores não possui cartas suficientes.");
-            }
+            error_log("Cartas decodificadas: Player 1 -> " . json_encode($cardPlayer1) . ", Player 2 -> " . json_encode($cardPlayer2));
 
             return [
-                'player1' => $firstCardPlayer1,
-                'player2' => $firstCardPlayer2
+                'player1' => $cardPlayer1[0] ?? null,
+                'player2' => $cardPlayer2[0] ?? null
             ];
         } catch (PDOException $e) {
-            die('Erro ao buscar as primeiras cartas: ' . $e->getMessage());
+            throw new PDOException("Erro ao buscar as primeiras cartas: " . $e->getMessage());
         }
     }
 
-    public static function compareCards($card1Id, $card2Id, $attribute) {
+    public static function compareFirstCards($card1Id, $card2Id, $attribute) {
         try {
             $pdo = self::connect();
+    
+            $deckQuery = "
+                SELECT d.Atributte01, d.Atributte02, d.Atributte03, d.Atributte04, d.Atributte05
+                FROM card c
+                JOIN deck d ON c.Deck_ID = d.id
+                WHERE c.id = ?
+            ";
+            $deckStmt = $pdo->prepare($deckQuery);
+            $deckStmt->execute([$card1Id]);
+            $deck = $deckStmt->fetch(PDO::FETCH_ASSOC);
 
-            // Buscar os atributos das cartas
+            if (!$deck) {
+                throw new PDOException("Deck não encontrado para a carta.");
+            }
+    
+            $attributeMap = [
+                'Score01' => $deck['Atributte01'],
+                'Score02' => $deck['Atributte02'],
+                'Score03' => $deck['Atributte03'],
+                'Score04' => $deck['Atributte04'],
+                'Score05' => $deck['Atributte05']
+            ];
+    
+            if (!isset($attributeMap[$attribute])) {
+                throw new PDOException("Atributo não encontrado no deck.");
+            }
+    
+            $attributeName = $attributeMap[$attribute];
+    
             $query = "SELECT id, $attribute FROM card WHERE id IN (?, ?)";
             $stmt = $pdo->prepare($query);
             $stmt->execute([$card1Id, $card2Id]);
             $cards = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
+    
             if (count($cards) !== 2) {
                 throw new PDOException("Não foi possível encontrar ambas as cartas para comparação.");
             }
-
+    
             $card1 = $cards[0]['id'] == $card1Id ? $cards[0] : $cards[1];
             $card2 = $cards[0]['id'] == $card2Id ? $cards[0] : $cards[1];
-
+    
             $value1 = $card1[$attribute] ?? null;
             $value2 = $card2[$attribute] ?? null;
-
+    
             if ($value1 === null || $value2 === null) {
                 throw new PDOException("Atributo especificado não encontrado nas cartas.");
             }
-
-            // Comparar os valores
+    
             if ($value1 > $value2) {
-                return "Jogador 1 venceu com o atributo $attribute ($value1 > $value2).";
+                return "Jogador 1 venceu com o atributo $attributeName ($value1 > $value2).";
             } elseif ($value1 < $value2) {
-                return "Jogador 2 venceu com o atributo $attribute ($value2 > $value1).";
+                return "Jogador 2 venceu com o atributo $attributeName ($value2 > $value1).";
             } else {
-                return "Empate no atributo $attribute ($value1 = $value2).";
+                return "Empate no atributo $attributeName ($value1 = $value2).";
             }
         } catch (PDOException $e) {
-            die('Erro ao comparar cartas: ' . $e->getMessage());
+            throw new PDOException("Erro ao comparar as cartas: " . $e->getMessage());
         }
     }
-
-
     
-
-
-    // public static function deleteDeckByID($Deck_ID)
-    // {
-    //     $sql = "DELETE FROM deck WHERE id = ?";
-    //     try {
-    //         $pdo = self::connect();
-    //         $stmt = $pdo->prepare($sql);
-    //         return $stmt->execute([$Deck_ID]);
-    //     } catch (PDOException $e) {
-    //         die('Erro ao deletar deck: ' . $e->getMessage());
-    //     }
-    // }
-
-   
-
-
+    public static function removeCardFromPlayer($session_id, $losingPlayer) {
+        try {
+            $pdo = self::connect();
+    
+            $column = ($losingPlayer === 'player1') ? 'cardPlayer1' : 'cardPlayer2';
+    
+            $query = "SELECT $column FROM games WHERE session_id = ?";
+            $stmt = $pdo->prepare($query);
+            $stmt->execute([$session_id]);
+            $cards = $stmt->fetchColumn();
+    
+            if (!$cards) {
+                throw new PDOException("Cartas não encontradas para o jogador perdedor.");
+            }
+    
+            $decodedCards = json_decode($cards, true);
+            array_shift($decodedCards);
+    
+            $updatedCards = json_encode($decodedCards);
+            $updateQuery = "UPDATE games SET $column = ? WHERE session_id = ?";
+            $updateStmt = $pdo->prepare($updateQuery);
+            $updateStmt->execute([$updatedCards, $session_id]);
+        } catch (PDOException $e) {
+            throw new PDOException("Erro ao atualizar as cartas do jogador perdedor: " . $e->getMessage());
+        }
+    }
 
 }
