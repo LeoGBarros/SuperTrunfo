@@ -26,7 +26,7 @@ class PlayerGameController
             // $response->getBody()->write(json_encode($error));
             // return $response->withStatus(401)->withHeader('Content-Type', 'application/json');
 
-            return Respostas::error(Respostas::ERR_CREATE_CARD);
+            return Respostas::error(Respostas::ERR_CREATE_GAME);
         }
     
         $token = substr($authHeader, 7);
@@ -43,7 +43,7 @@ class PlayerGameController
                 // $response->getBody()->write(json_encode($error));
                 // return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
 
-                return Respostas::error(Respostas::ERR_CREATE_CARD);
+                return Respostas::error(Respostas::ERR_VALIDATION);
             }
     
             // Cria o jogo e retorna o session_id

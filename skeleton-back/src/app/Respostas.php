@@ -14,6 +14,7 @@ class Respostas
     const ERR_CREATE_CARD         = ['status' => 400, 'body' => ['code' => 1001, 'message' => 'Error create card.']];
     const ERR_CREATE_DECK         = ['status' => 400, 'body' => ['code' => 1002, 'message' => 'Error create deck.']];
     const ERR_CREATE_USER         = ['status' => 400, 'body' => ['code' => 1003, 'message' => 'Error create user.']];
+    const ERR_CREATE_GAME         = ['status' => 400, 'body' => ['code' => 1003, 'message' => 'Error create game.']];
     const ERR_INVALID_ID          = ['status' => 400, 'body' => ['code' => 1004, 'message' => 'Invalid ID provided.']];
     const NO_FIELDS_UPDATED       = ['status' => 400, 'body' => ['code' => 1005, 'message' => 'No fields were updated.']];
     const ERR_UPDATE_DECK         = ['status' => 400, 'body' => ['code' => 1006, 'message' => 'Error update deck.']];
