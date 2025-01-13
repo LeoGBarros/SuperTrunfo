@@ -35,7 +35,6 @@ class GameModel
                 throw new \Exception('Já existe uma partida criada e não iniciada para este usuário.');
             }
 
-            // Cria o jogo
             $sql = "INSERT INTO games (owner_id, deck_select) VALUES (?, ?)";
             $stmt = $pdo->prepare($sql);
             $stmt->execute([$owner_id, $deck_select]);
@@ -91,7 +90,7 @@ class GameModel
 
 
     public static function joinGame($id, array $fieldsToUpdate){
-        $setClause = implode(', ', array_map(fn($key) => "$key = :$key", array_keys($fieldsToUpdate)));
+        $setClause = implode(', ', array_map(fn($key) => "$key = :$key", array_keys($fieldsToUpdate))); // Vai colocar em uma string os campos percorridos pelo array_map separados por ',' 
         $sql = "UPDATE games SET $setClause WHERE session_id = :session_id";       
 
         try {
@@ -166,7 +165,7 @@ class GameModel
             $cardPlayer1 = json_decode($cards['cardPlayer1'], true);
             $cardPlayer2 = json_decode($cards['cardPlayer2'], true);
 
-            error_log("Cartas decodificadas: Player 1 -> " . json_encode($cardPlayer1) . ", Player 2 -> " . json_encode($cardPlayer2));
+            // error_log("Cartas decodificadas: Player 1 -> " . json_encode($cardPlayer1) . ", Player 2 -> " . json_encode($cardPlayer2));
 
             return [
                 'player1' => $cardPlayer1[0] ?? null,

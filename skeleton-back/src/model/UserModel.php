@@ -101,7 +101,7 @@ class UserModel
     }
 
     public static function updateUser($id, array $fieldsToUpdate){
-        $setClause = implode(', ', array_map(fn($key) => "$key = ?", array_keys($fieldsToUpdate)));
+        $setClause = implode(', ', array_map(fn($key) => "$key = ?", array_keys($fieldsToUpdate))); // Vai colocar em uma string os campos percorridos pelo array_map separados por ','
         $sql = "UPDATE user SET $setClause WHERE id = ?";
 
         try {

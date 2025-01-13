@@ -299,8 +299,7 @@ class PlayerGameController
             $player2Cards = CardModel::getCardsByIDsGameInformation($cardPlayer2);
 
             $response->getBody()->write(json_encode([
-                'success' => true,
-                'data' => [
+                'Dados' => [
                     'players' => [
                         'owner_id' => $owner_id,
                         'other_player_id' => $other_player_id

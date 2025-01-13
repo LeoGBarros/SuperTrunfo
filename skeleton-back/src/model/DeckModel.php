@@ -75,7 +75,7 @@ class DeckModel
     }
 
     public static function updateDeck($id, array $fieldsToUpdate){
-        $setClause = implode(', ', array_map(fn($key) => "$key = ?", array_keys($fieldsToUpdate)));
+        $setClause = implode(', ', array_map(fn($key) => "$key = ?", array_keys($fieldsToUpdate))); // Vai colocar em uma string os campos percorridos pelo array_map separados por ','
         $sql = "UPDATE deck SET $setClause WHERE id = ?";
         
         try {

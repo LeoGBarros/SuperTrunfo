@@ -54,7 +54,7 @@ class CardModel
         if (empty($ids)) {
             return [];
         }    
-        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $placeholders = implode(',', array_fill(0, count($ids), '?')); // Vai criar um array com '?' separados por ',' na quantidade recebida em count(ids)
         $sql = "SELECT id, Deck_ID, name, image, Score01, Score02, Score03, Score04, Score05 
                 FROM card WHERE id IN ($placeholders)";
         try {
@@ -94,7 +94,7 @@ class CardModel
     }
 
     public static function updateCard($id, array $fieldsToUpdate){
-        $setClause = implode(', ', array_map(fn($key) => "$key = ?", array_keys($fieldsToUpdate)));
+        $setClause = implode(', ', array_map(fn($key) => "$key = ?", array_keys($fieldsToUpdate))); // Vai colocar em uma string os campos percorridos pelo array_map separados por ','
         $sql = "UPDATE card SET $setClause WHERE id = ?";
     
         try {

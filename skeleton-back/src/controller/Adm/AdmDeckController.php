@@ -55,7 +55,7 @@ class AdmDeckController
         }                
             $response->getBody()->write(json_encode($result)); 
             return $response;
-        } 
+    } 
         
     public function updateDeck(Request $request, Response $response, array $args){
         $params = json_decode($request->getBody()->getContents(), true) ?? [];
