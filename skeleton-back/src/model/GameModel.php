@@ -247,7 +247,7 @@ class GameModel
             }
     
             $decodedCards = json_decode($cards, true);
-            array_shift($decodedCards);
+            array_shift($decodedCards); // Remove o primeiro elemento do array e organiza os indice do array para que comecem do zero
     
             $updatedCards = json_encode($decodedCards);
             $updateQuery = "UPDATE games SET $column = ? WHERE session_id = ?";

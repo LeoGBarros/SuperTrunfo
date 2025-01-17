@@ -286,53 +286,88 @@ class PlayerGameController
         }
     }
 
-    public function gameInformation(Request $request, Response $response, array $args) {
+    public function gameInformation(Request $request, Response $response, array $args): Response {
         $session_id = $args['session_id'] ?? null;
 
         if (!$session_id) {
+            // error_log('Erro: session_id não fornecido.');
             $response->getBody()->write(json_encode(['error' => 'session_id não fornecido.']));
             return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
         }
 
+        $authHeader = $request->getHeaderLine('Authorization');
+        // error_log('Authorization Header: ' . $authHeader);
+
+        if (!$authHeader || !str_starts_with($authHeader, 'Bearer ')) {
+            // error_log('Erro: Token JWT ausente ou inválido.');
+            $response->getBody()->write(json_encode(['error' => 'Token JWT ausente ou inválido.']));
+            return $response->withStatus(401)->withHeader('Content-Type', 'application/json');
+        }
+
+        $token = substr($authHeader, 7);
+        // error_log('Token extraído: ' . $token);
+
         try {
+            $decodedToken = JWT::decode($token, new Key('a9b1k87YbOpq3h2Mz8aXvP9wLQZ5R4pJ3cLrV5ZJ5DkRt0jQYzZnM+W8X4Lo0yZp', 'HS256'));
+            $user_ID = $decodedToken->user_ID ?? null;
+
+            // error_log('Token decodificado com sucesso. user_ID: ' . $user_ID);
+
+            if (!$user_ID) {
+                // error_log('Erro: user_ID ausente no token.');
+                $response->getBody()->write(json_encode(['error' => 'Token inválido ou usuário não autorizado.']));
+                return $response->withStatus(401)->withHeader('Content-Type', 'application/json');
+            }
+
+            // Obtém informações do jogo
             $game = GameModel::getCreatedGameByID($session_id);
+            // error_log('Dados do jogo: ' . json_encode($game));
 
             if (!$game) {
+                // error_log('Erro: Sessão não encontrada para session_id: ' . $session_id);
                 $response->getBody()->write(json_encode(['error' => 'Sessão não encontrada.']));
                 return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
             }
+
+            // Verifica se o usuário é o owner_id ou o otherPlayer_id
             $owner_id = $game['owner_id'] ?? null;
             $other_player_id = $game['otherPlayer_id'] ?? null;
-            $whose_turn = $game['whose_turn'] ?? null;
 
+            // error_log("Owner ID: $owner_id, Other Player ID: $other_player_id");
+
+            if ($user_ID !== $owner_id && $user_ID !== $other_player_id) {
+                // error_log('Erro: Usuário não autorizado. user_ID: ' . $user_ID);
+                $response->getBody()->write(json_encode(['error' => 'Usuário não autorizado a acessar esta sessão.']));
+                return $response->withStatus(403)->withHeader('Content-Type', 'application/json');
+            }
+
+            // Define as cartas que o usuário pode acessar
             $cardPlayer1 = json_decode($game['cardPlayer1'] ?? '[]', true);
             $cardPlayer2 = json_decode($game['cardPlayer2'] ?? '[]', true);
 
-            // error_log("Raw cardPlayer1: " . $game['cardPlayer1']);
-            // error_log("Decoded cardPlayer1: " . json_encode($cardPlayer1));
-            // error_log("Raw cardPlayer2: " . $game['cardPlayer2']);
-            // error_log("Decoded cardPlayer2: " . json_encode($cardPlayer2));
+            // error_log('Cartas do Player 1: ' . json_encode($cardPlayer1));
+            // error_log('Cartas do Player 2: ' . json_encode($cardPlayer2));
 
-            $player1Cards = CardModel::getCardsByIDsGameInformation($cardPlayer1);
-            $player2Cards = CardModel::getCardsByIDsGameInformation($cardPlayer2);
+            $accessibleCards = [];
+            if ($user_ID === $owner_id) {
+                $accessibleCards = CardModel::getCardsByIDsGameInformation($cardPlayer1);
+            } elseif ($user_ID === $other_player_id) {
+                $accessibleCards = CardModel::getCardsByIDsGameInformation($cardPlayer2);
+            }
 
             $response->getBody()->write(json_encode([
-                'Dados' => [
-                    'players' => [
-                        'owner_id' => $owner_id,
-                        'other_player_id' => $other_player_id
-                    ],
-                    'whose_turn' => $whose_turn,
-                    'cards' => [
-                        'player1' => $player1Cards,
-                        'player2' => $player2Cards
-                    ]
+                'Dados da partida' => [
+                    'Seu ID' => $user_ID,
+                    'Quem vai jogar é o jogador com ID' => $game['whose_turn'] ?? null,
+                    'Suas cartas' => $accessibleCards
                 ]
             ]));
             return $response->withStatus(200)->withHeader('Content-Type', 'application/json');
+
         } catch (\Exception $e) {
             $response->getBody()->write(json_encode(['error' => 'Erro ao obter informações do jogo: ' . $e->getMessage()]));
             return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
         }
     }
+
 }
