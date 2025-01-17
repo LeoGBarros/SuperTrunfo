@@ -25,9 +25,7 @@ class GameModel
     public static function createGame($owner_id, $deck_select){
         try {
             $pdo = self::connect();
-
-            // Verifica se já existe um jogo não iniciado para este owner_id
-            $sqlCheck = "SELECT COUNT(*) FROM games WHERE owner_id = ? AND status_game = 'dont_started'";
+            $sqlCheck = "SELECT COUNT(*) FROM games WHERE owner_id = ? AND status_game = 'dont_started' ";
             $stmtCheck = $pdo->prepare($sqlCheck);
             $stmtCheck->execute ([$owner_id]);
 
@@ -39,31 +37,11 @@ class GameModel
             $stmt = $pdo->prepare($sql);
             $stmt->execute([$owner_id, $deck_select]);
 
-            // Retorna o session_id gerado automaticamente
             return $pdo->lastInsertId();
         } catch (\Exception $e) {
             throw new \Exception($e->getMessage());
         }
     }
-
-    public static function getOwnerId($token){
-        try {
-            $decoded = JWT::decode($token, new Key('a9b1k87YbOpq3h2Mz8aXvP9wLQZ5R4pJ3cLrV5ZJ5DkRt0jQYzZnM', 'HS256'));
-            // error_log('Token decodificado: ' . json_encode($decoded));
-
-            // Verifica os campos user_id ou user_ID no token
-            if (isset($decoded->user_ID)) {
-                return $decoded->user_ID;
-            } else {
-                throw new \Exception('ID do usuário (user_id ou user_ID) não encontrado no token.');
-            }
-        } catch (\Firebase\JWT\ExpiredException $e) {
-            throw new \Exception('Token expirado.');
-        } catch (\Exception $e) {
-            throw new \Exception('Erro ao decodificar token.');
-        }
-    }   
-
 
     public static function getCreatedGameByID($session_id ){
         $sql = "SELECT session_id, owner_id, otherPlayer_id, deck_select, status_game, whose_turn, cardPlayer1, cardPlayer2 FROM games WHERE session_id  = ?";
@@ -76,6 +54,20 @@ class GameModel
             die('Erro ao buscar jogos criados por ID: ' . $e->getMessage());
         }
     }
+
+    public static function getActiveGameByOwner($owner_id){
+        $sql = "SELECT session_id, owner_id, status_game FROM games WHERE owner_id = ? AND status_game IN ('started', 'dont_started')";
+
+        try {
+            $pdo = self::connect();
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([$owner_id]);
+            return $stmt->fetch(); // Retorna o primeiro jogo ativo encontrado
+        } catch (PDOException $e) {
+            die('Erro ao buscar jogos ativos por owner_id: ' . $e->getMessage());
+        }
+    }
+
 
     public static function getAllCreatedGames(){
         $sql = "SELECT session_id, owner_id, otherPlayer_id, deck_select, status_game FROM games";
@@ -90,7 +82,7 @@ class GameModel
 
 
     public static function joinGame($id, array $fieldsToUpdate){
-        $setClause = implode(', ', array_map(fn($key) => "$key = :$key", array_keys($fieldsToUpdate))); // Vai colocar em uma string os campos percorridos pelo array_map separados por ',' 
+        $setClause = implode(', ', array_map(fn($key) => "$key = :$key", array_keys($fieldsToUpdate))); // Vai colocar em uma string os campos percorridos pelo array_map separados por ','
         $sql = "UPDATE games SET $setClause WHERE session_id = :session_id";       
 
         try {
@@ -133,7 +125,7 @@ class GameModel
         
             shuffle($cardIds);
         
-            $midpoint = floor(count($cardIds) / 2);
+            $midpoint = floor(count($cardIds) / 2); //justifcar floor
             $cardPlayer1 = json_encode(array_slice($cardIds, 0, $midpoint));
             $cardPlayer2 = json_encode(array_slice($cardIds, $midpoint));
         
@@ -156,7 +148,7 @@ class GameModel
             $stmt = $pdo->prepare($query);
             $stmt->execute([$session_id]);
             $cards = $stmt->fetch(PDO::FETCH_ASSOC);
-            error_log("Cartas brutas encontradas: " . json_encode($cards));
+            // error_log("Cartas brutas encontradas: " . json_encode($cards));
 
             if (!$cards) {
                 throw new PDOException("Não foi possível encontrar as cartas para a sessão.");

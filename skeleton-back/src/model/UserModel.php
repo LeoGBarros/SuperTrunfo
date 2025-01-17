@@ -67,8 +67,25 @@ class UserModel
         } catch (PDOException $e) {
             die('Erro ao buscar todos os usuários: ' . $e->getMessage());
         }
-    }    
+    }        
 
+    public static function getOwnerId($token){
+        try {
+            $decoded = JWT::decode($token, new Key('a9b1k87YbOpq3h2Mz8aXvP9wLQZ5R4pJ3cLrV5ZJ5DkRt0jQYzZnM+W8X4Lo0yZp', 'HS256'));
+            error_log('Estrutura do token JWT: ' . json_encode($decoded));
+
+            // Verifica os campos user_id ou user_ID no token
+            if (isset($decoded->user_ID)) {
+                return $decoded->user_ID;
+            } else {
+                throw new \Exception('ID do usuário (user_id ou user_ID) não encontrado no token.');
+            }
+        } catch (\Firebase\JWT\ExpiredException $e) {
+            throw new \Exception('Token expirado.');
+        } catch (\Exception $e) {
+            throw new \Exception('Erro ao decodificar token.');
+        }
+    }   
 
     public static function checkAdmin($token){
         try {

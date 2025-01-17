@@ -9,145 +9,163 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use App\Respostas;
 use Model\CardModel;
+use Model\DeckModel;
 use Model\GameModel;
+use Model\UserModel;
 use PDO;
 
 require __DIR__ . '/../../model/GameModel.php';
 
 class PlayerGameController
 {   
-    public function createGame(Request $request, Response $response): Response
-    {
+    public function createGame(Request $request, Response $response): Response{
         $headers = $request->getHeader('Authorization');
         $authHeader = $headers[0] ?? null;
-    
-        if (!$authHeader || !str_starts_with($authHeader, 'Bearer ')) {
-            // $error = ['error' => 'Token JWT ausente ou inválido.'];
-            // $response->getBody()->write(json_encode($error));
-            // return $response->withStatus(401)->withHeader('Content-Type', 'application/json');
 
+        if (!$authHeader || !str_starts_with($authHeader, 'Bearer ')) {
             return Respostas::error(Respostas::ERR_CREATE_GAME);
         }
-    
+
         $token = substr($authHeader, 7);
-    
+
         try {
-            $ownerId = GameModel::getOwnerId($token);
-            // error_log('Owner ID extraído: ' . $ownerId);
-    
+            $ownerId = UserModel::getOwnerId($token);
+
             $data = json_decode($request->getBody()->getContents(), true);
             $deckSelect = $data['deck_select'] ?? null;
-    
-            if (!$deckSelect) {
-                // $error = ['error' => 'O campo "deck_select" é obrigatório.'];
-                // $response->getBody()->write(json_encode($error));
-                // return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
 
-                return Respostas::error(Respostas::ERR_VALIDATION);
+            if (!$deckSelect) {
+                $error = ['error' => 'O campo Deck Select é obrigatório.'];
+                $response->getBody()->write(json_encode($error));
+                return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
             }
-    
-            // Cria o jogo e retorna o session_id
+
+            if (!is_numeric($deckSelect)) {
+                $error = ['error' => 'O campo Deck Select deve ser um número válido.'];
+                $response->getBody()->write(json_encode($error));
+                return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+            }
+            $existingGame = GameModel::getActiveGameByOwner($ownerId);
+
+            if ($existingGame && in_array($existingGame['status_game'], ['started', 'dont_started'])) {
+                $error = ['error' => 'Você já possui um jogo ativo. Não é possível criar outro jogo.'];
+                $response->getBody()->write(json_encode($error));
+                return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+            }
+            $deck = DeckModel::getDeckById($deckSelect);
+
+            if (!$deck) {
+                $error = ['error' => 'Deck não encontrado.'];
+                $response->getBody()->write(json_encode($error));
+                return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
+            }
+
+            if ($deck['disponible'] === 0) {
+                $error = ['error' => 'Deck selecionado não está disponível.'];
+                $response->getBody()->write(json_encode($error));
+                return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+            }
             $sessionId = GameModel::createGame($ownerId, $deckSelect);
-    
+
             $responseData = [
                 'message' => 'Jogo criado com sucesso.',
                 'session_id' => $sessionId
             ];
-    
+
             $response->getBody()->write(json_encode($responseData));
             return $response->withStatus(201)->withHeader('Content-Type', 'application/json');
-    
+
         } catch (\Exception $e) {
             $error = ['error' => $e->getMessage()];
             $response->getBody()->write(json_encode($error));
             return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
         }
-    }
-    
+    }    
 
     public function getCreatedGameByID(Request $request, Response $response, array $args){
-        if (($result = GameModel::getCreatedGameByID($args['session_id'])) === null) {
-            $response->getBody()->write(json_encode(['error' => 'ID invalido']));
+        if (($result = GameModel::getCreatedGameByID($args['session_id'])) === false) {
+            $response->getBody()->write(json_encode(['error' => 'ID não existente']));
             return $response->withStatus(400);            
         }                
+        if(isset($result) && !intval($result)){
+            $error = ['error' => 'O ID é obrigatoriamnete um numero.'];
+            $response->getBody()->write(json_encode($error));
+            return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+        }
         $response->getBody()->write(json_encode($result)); 
         return $response;
     } 
         
     public function getAllCreatedGames(Request $request, Response $response, array $args){
         $result = GameModel::getAllCreatedGames();
-        if ($result === null) {
-
+        if ($result === false) {
             $response->getBody()->write(json_encode(['error' => 'Não foi possivel pegar todos os jogos']));
             return $response->withStatus(400);           
-            }                
-            $response->getBody()->write(json_encode($result)); 
-            return $response;
+        }                
+        $response->getBody()->write(json_encode($result)); 
+        return $response;
     }
 
     public function joinGame(Request $request, Response $response, array $args){
-        // Log da entrada na função
-        // error_log('Entered joinGame Controller');
-
         $session_id = $args['session_id'] ?? null;
-        // error_log('Session ID: ' . json_encode($session_id));
-
-        if (!$session_id) {
-            // error_log('Invalid Session ID');
-            $response->getBody()->write(json_encode(['error' => 'Session ID invalido']));
-            return $response->withStatus(401)->withHeader('Content-Type', 'application/json');
-        }
-
+    
         $authorizationHeader = $request->getHeaderLine('Authorization');
-        // error_log('Authorization Header: ' . json_encode($authorizationHeader));
-
+    
         if (!$authorizationHeader) {
-            // error_log('Authorization token missing');
             $response->getBody()->write(json_encode(['error' => 'Authorization token missing']));
             return $response->withStatus(401)->withHeader('Content-Type', 'application/json');
         }
-
+    
         try {
             $token = str_replace('Bearer ', '', $authorizationHeader);
-            // error_log('Token: ' . $token);
-
             $decodedToken = JWT::decode($token, new Key('a9b1k87YbOpq3h2Mz8aXvP9wLQZ5R4pJ3cLrV5ZJ5DkRt0jQYzZnM+W8X4Lo0yZp', 'HS256'));
-            // error_log('Decoded Token: ' . json_encode($decodedToken));
-
             $user_ID = $decodedToken->user_ID ?? null;
-            // error_log('User ID: ' . json_encode($user_ID));
-
+    
             if (!$user_ID) {
-                // error_log('User unauthorized');
                 $response->getBody()->write(json_encode(['error' => 'Usuario não autorizado.']));
                 return $response->withStatus(401)->withHeader('Content-Type', 'application/json');
             }
-
+    
             $currentGame = GameModel::getCreatedGameByID($session_id);
-            // error_log('Current Game Data: ' . json_encode($currentGame));
-
+    
             if (!$currentGame) {
-                // error_log('Game not found for Session ID: ' . $session_id);
                 $response->getBody()->write(json_encode(['error' => 'Game não encontrado.']));
                 return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
             }
+    
+            if ($currentGame['status_game'] === 'started') {
+                $response->getBody()->write(json_encode(['error' => 'A partida já foi iniciada.']));
+                return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+            }
 
-            $fieldsToUpdate = ['otherPlayer_id' => $user_ID];   
+            $player2 = $currentGame['otherPlayer_id'] ?? null;
+            $owner_id = $currentGame['owner_id'] ?? null;
+    
+            if ($user_ID === $owner_id) {
+                $response->getBody()->write(json_encode(['error' => 'Jogador já está dentro da partida.']));
+                return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+            }
+    
+            if ($player2) {
+                $response->getBody()->write(json_encode(['error' => 'O jogo já possui dois jogadores.']));
+                return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+            }
+    
+            $fieldsToUpdate = ['otherPlayer_id' => $user_ID];
             $result = GameModel::joinGame($session_id, $fieldsToUpdate);
-        
-
+    
             if ($result) {
-                $response->getBody()->write(json_encode(['success' => true, 'message' => 'Player juntou se  com sucesso.']));
+                $response->getBody()->write(json_encode(['success' => true, 'message' => 'Jogador juntou-se com sucesso.']));
                 return $response->withStatus(200)->withHeader('Content-Type', 'application/json');
             } else {
-                $response->getBody()->write(json_encode(['error' => 'Falha ao junta se ao game.']));
+                $response->getBody()->write(json_encode(['error' => 'Falha ao juntar-se ao jogo.']));
                 return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
             }
         } catch (\Exception $e) {
-            $response->getBody()->write(json_encode(['error' => 'Token invalido: ' . $e->getMessage()]));
+            $response->getBody()->write(json_encode(['error' => 'Token inválido: ' . $e->getMessage()]));
             return $response->withStatus(401)->withHeader('Content-Type', 'application/json');
         }
-    }
+    } 
 
 
     public function startGame(Request $request, Response $response, array $args) {
