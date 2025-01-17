@@ -222,10 +222,8 @@ class PlayerGameController
     public function compareCards(Request $request, Response $response, array $args) {
         $session_id = $args['session_id'] ?? null;
         $rawBody = $request->getBody()->getContents();
-        // error_log("Corpo bruto recebido: " . $rawBody);
         $body = json_decode($rawBody, true);
-        // error_log("Corpo decodificado: " . json_encode($body));
-
+    
         $attribute = $body['attribute'] ?? null;
     
         $authorizationHeader = $request->getHeaderLine('Authorization');
@@ -238,7 +236,7 @@ class PlayerGameController
             $token = str_replace('Bearer ', '', $authorizationHeader);
             $decodedToken = JWT::decode($token, new Key('a9b1k87YbOpq3h2Mz8aXvP9wLQZ5R4pJ3cLrV5ZJ5DkRt0jQYzZnM+W8X4Lo0yZp', 'HS256'));
             $user_ID = $decodedToken->user_ID ?? null;
-                    
+    
             if (!$user_ID) {
                 throw new \Exception('Usuario não encontrado no token.');
             }
@@ -273,9 +271,15 @@ class PlayerGameController
             $result = GameModel::compareFirstCards($cards['player1'], $cards['player2'], $attribute);
     
             if (strpos($result, 'Jogador 1 venceu') !== false) {
-                GameModel::removeCardFromPlayer($session_id, 'player2');
+                $removedCard = GameModel::removeCardFromPlayer($session_id, 'player2');
+                GameModel::addCardToPlayer($session_id, 'cardPlayer1', $removedCard);
+    
+                GameModel::updateLastRoundWinner($session_id, $game['owner_id']);
             } elseif (strpos($result, 'Jogador 2 venceu') !== false) {
-                GameModel::removeCardFromPlayer($session_id, 'player1');
+                $removedCard = GameModel::removeCardFromPlayer($session_id, 'player1');
+                GameModel::addCardToPlayer($session_id, 'cardPlayer2', $removedCard);
+    
+                GameModel::updateLastRoundWinner($session_id, $game['otherPlayer_id']);
             }
     
             $response->getBody()->write(json_encode(['success' => true, 'message' => $result]));
@@ -285,6 +289,9 @@ class PlayerGameController
             return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
         }
     }
+    
+
+
 
     public function gameInformation(Request $request, Response $response, array $args): Response {
         $session_id = $args['session_id'] ?? null;
@@ -359,7 +366,8 @@ class PlayerGameController
                 'Dados da partida' => [
                     'Seu ID' => $user_ID,
                     'Quem vai jogar é o jogador com ID' => $game['whose_turn'] ?? null,
-                    'Suas cartas' => $accessibleCards
+                    'Suas cartas' => $accessibleCards,
+                    'Vencedor da última rodada' => $game['last_round_winner'] ?? null
                 ]
             ]));
             return $response->withStatus(200)->withHeader('Content-Type', 'application/json');
