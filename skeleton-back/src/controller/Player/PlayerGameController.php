@@ -191,6 +191,15 @@ class PlayerGameController
                 return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
             }
 
+            $otherPlayer_id= $game['otherPlayer_id'] ?? null;
+
+            if (!isset($otherPlayer_id)) {
+                $response->getBody()->write(json_encode(['error' => 'Não tem jogadores suficientes na partida.']));
+                return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+            }
+
+            
+
             GameModel::startGame($Deck_ID, $session_id);
             $response->getBody()->write(json_encode(['success' => true, 'message' => 'Jogo iniciado com sucesso.']));
             return $response->withStatus(200)->withHeader('Content-Type', 'application/json');
