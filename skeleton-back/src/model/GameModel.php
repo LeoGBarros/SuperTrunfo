@@ -125,7 +125,7 @@ class GameModel
         
             shuffle($cardIds);
         
-            $midpoint = floor(count($cardIds) / 2); //justifcar floor
+            $midpoint = floor(count($cardIds) / 2); // O floor gante que o primeiro array (cardPlayer1) terá o menor número possível de cartas ao lidar com um número ímpar para o segundo array (cardPlayer2) ter o restante.
             $cardPlayer1 = json_encode(array_slice($cardIds, 0, $midpoint));
             $cardPlayer2 = json_encode(array_slice($cardIds, $midpoint));
         
