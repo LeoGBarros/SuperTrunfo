@@ -138,6 +138,11 @@ class PlayerGameController
                 return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
             }
 
+            if ($currentGame['status_game'] === 'finished') {
+                $response->getBody()->write(json_encode(['error' => 'A partida já foi finalizada.']));
+                return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+            }
+
             $player2 = $currentGame['otherPlayer_id'] ?? null;
             $owner_id = $currentGame['owner_id'] ?? null;
     
@@ -148,6 +153,25 @@ class PlayerGameController
     
             if ($player2) {
                 $response->getBody()->write(json_encode(['error' => 'O jogo já possui dois jogadores.']));
+                return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+            }
+
+            //verifica se participa de mais jogos
+            $allCurrentGames = GameModel::getAllCreatedGames();
+            $isInAnotherGame = false;   
+
+            foreach ($allCurrentGames as $game) {
+                $player2 = $game['otherPlayer_id'] ?? null;
+                $owner_id = $game['owner_id'] ?? null;
+
+                if ($user_ID === $owner_id || $user_ID === $player2) {
+                    $isInAnotherGame = true;
+                    break;
+                }
+            }
+
+            if ($isInAnotherGame) {
+                $response->getBody()->write(json_encode(['error' => 'Jogador já está dentro de outra partida.']));
                 return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
             }
     
@@ -196,9 +220,7 @@ class PlayerGameController
             if (!isset($otherPlayer_id)) {
                 $response->getBody()->write(json_encode(['error' => 'Não tem jogadores suficientes na partida.']));
                 return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
-            }
-
-            
+            }           
 
             GameModel::startGame($Deck_ID, $session_id);
             $response->getBody()->write(json_encode(['success' => true, 'message' => 'Jogo iniciado com sucesso.']));
@@ -270,26 +292,42 @@ class PlayerGameController
                 $response->getBody()->write(json_encode(['error' => 'Não é a vez deste jogador.']));
                 return $response->withStatus(403)->withHeader('Content-Type', 'application/json');
             }
-    
+            
             $cards = GameModel::getFirstCards($session_id);
             if (!$cards || !isset($cards['player1'], $cards['player2'])) {
                 $response->getBody()->write(json_encode(['error' => 'Cartas não encontradas para os jogadores.']));
                 return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
-            }
+            }           
+
     
             $result = GameModel::compareFirstCards($cards['player1'], $cards['player2'], $attribute);
     
             if (strpos($result, 'Jogador 1 venceu') !== false) {
                 $removedCard = GameModel::removeCardFromPlayer($session_id, 'player2');
-                GameModel::addCardToPlayer($session_id, 'cardPlayer1', $removedCard);
-    
+                GameModel::addCardToPlayer($session_id, 'cardPlayer1', $removedCard);    
                 GameModel::updateLastRoundWinner($session_id, $game['owner_id']);
+
             } elseif (strpos($result, 'Jogador 2 venceu') !== false) {
                 $removedCard = GameModel::removeCardFromPlayer($session_id, 'player1');
-                GameModel::addCardToPlayer($session_id, 'cardPlayer2', $removedCard);
-    
+                GameModel::addCardToPlayer($session_id, 'cardPlayer2', $removedCard);    
                 GameModel::updateLastRoundWinner($session_id, $game['otherPlayer_id']);
             }
+
+            $cards = GameModel::getFirstCards($session_id);
+
+            if (!isset($cards['player1']) || empty($cards['player1'])) {                
+                GameModel::updateGameStatus($session_id, 'finished');
+                GameModel::setWinner($session_id, $game['otherPlayer_id']);
+                $response->getBody()->write(json_encode(['success' => true, 'message' => 'Jogador 2 venceu a partida.']));
+                return $response->withStatus(200)->withHeader('Content-Type', 'application/json');
+            }
+            
+            if (!isset($cards['player2']) || empty($cards['player2'])) {                
+                GameModel::updateGameStatus($session_id, 'finished');
+                GameModel::setWinner($session_id, $game['owner_id']);
+                $response->getBody()->write(json_encode(['success' => true, 'message' => 'Jogador 1 venceu a partida.']));
+                return $response->withStatus(200)->withHeader('Content-Type', 'application/json');
+            }            
     
             $response->getBody()->write(json_encode(['success' => true, 'message' => $result]));
             return $response->withStatus(200)->withHeader('Content-Type', 'application/json');
@@ -298,9 +336,6 @@ class PlayerGameController
             return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
         }
     }
-    
-
-
 
     public function gameInformation(Request $request, Response $response, array $args): Response {
         $session_id = $args['session_id'] ?? null;
@@ -374,9 +409,11 @@ class PlayerGameController
             $response->getBody()->write(json_encode([
                 'Dados da partida' => [
                     'Seu ID' => $user_ID,
+                    'Status da partida' => $game['status_game'] ?? null,
                     'Quem vai jogar é o jogador com ID' => $game['whose_turn'] ?? null,
                     'Suas cartas' => $accessibleCards,
-                    'Vencedor da última rodada' => $game['last_round_winner'] ?? null
+                    'Vencedor da última rodada' => $game['last_round_winner'] ?? null,
+                    'Vencedor da partida' => $game['gameWinner'] ?? null
                 ]
             ]));
             return $response->withStatus(200)->withHeader('Content-Type', 'application/json');

@@ -44,7 +44,7 @@ class GameModel
     }
 
     public static function getCreatedGameByID($session_id ){
-        $sql = "SELECT session_id, owner_id, otherPlayer_id, deck_select, status_game, whose_turn, cardPlayer1, cardPlayer2, last_round_winner FROM games WHERE session_id  = ?";
+        $sql = "SELECT session_id, owner_id, otherPlayer_id, deck_select, status_game, whose_turn, cardPlayer1, cardPlayer2, last_round_winner, gameWinner FROM games WHERE session_id  = ?";
         try {
             $pdo = self::connect();
             $stmt = $pdo->prepare($sql);
@@ -300,6 +300,29 @@ class GameModel
             throw new \Exception('Erro ao atualizar o vencedor da última rodada: ' . $e->getMessage());
         }
     }
+
+    public static function setWinner($session_id, $winner_id) {
+        $sql = "UPDATE games SET gameWinner = ? WHERE session_id = ?";
+        try {
+            $pdo = self::connect();
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([$winner_id, $session_id]);
+        } catch (PDOException $e) {
+            throw new \Exception('Erro ao definir o vencedor do jogo: ' . $e->getMessage());
+        }
+    }
+
+    public static function updateGameStatus($session_id) {
+        $sql = "UPDATE games SET status_game = 'finished' WHERE session_id = ?";
+        try {
+            $pdo = self::connect();
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([$session_id]);
+        } catch (PDOException $e) {
+            throw new \Exception('Erro ao atualizar o status do jogo para "finished": ' . $e->getMessage());
+        }
+    }
+    
 
 
 }
