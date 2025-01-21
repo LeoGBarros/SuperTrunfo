@@ -50,7 +50,12 @@ class AdmCardController
             $response->getBody()->write(json_encode(['error' => 'ID invalido']));
             return $response->withStatus(400);           
         }                
-        $response->getBody()->write(json_encode($result));  
+        if(isset($result) && !intval($result)){
+            $error = ['error' => 'O ID é obrigatoriamente um numero.'];
+            $response->getBody()->write(json_encode($error));
+            return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+        }
+        $response->getBody()->write(json_encode($result)); 
         return $response;
     } 
         
@@ -65,15 +70,24 @@ class AdmCardController
     }
 
     public function deleteCardByID(Request $request, Response $response, array $args){
-        $result = CardModel::deleteCardByID($args['id']);           
-        if ($result === 0) {
-            $response->getBody()->write(json_encode(['error' => 'ID invalido']));
-            return $response->withStatus(400);            
-        }          
-        $response->getBody()->write(json_encode(['success' => 'Carta deletada com Sucesso']));
-        return $response->withStatus(200);   
-    } 
-
+        $cardID = $args['id'] ?? false;
+        if (!$cardID) {
+            $response->getBody()->write(json_encode(['error' => 'ID da carta não fornecido.']));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+        }
+        $cardExists = CardModel::getCardByID($cardID);
+        if (!$cardExists) {
+            $response->getBody()->write(json_encode(['error' => 'Carta não encontrada. Verifique o ID e tente novamente.']));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
+        }
+        $result = CardModel::deleteCardByID($cardID);
+        if ($result === false) {
+            $response->getBody()->write(json_encode(['error' => 'Falha ao deletar a carta. Verifique o ID e tente novamente.']));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
+        }
+        $response->getBody()->write(json_encode(['message' => 'Carta deletada com sucesso.']));
+        return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
+    }
 
     public function updateCard(Request $request, Response $response, array $args){
         $params = json_decode($request->getBody()->getContents(), true) ?? [];
@@ -110,7 +124,7 @@ class AdmCardController
         $result = CardModel::updateCard($Card_ID, $fieldsToUpdate);
 
         if ($result) {
-            $response->getBody()->write(json_encode(['success' => true]));
+            $response->getBody()->write(json_encode(['success' => 'Carta Atualizada']));
             return $response->withStatus(200);
         } else {
             $response->getBody()->write(json_encode(['error' => 'Falha ao atualizar campos']));

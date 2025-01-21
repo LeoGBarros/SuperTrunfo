@@ -64,7 +64,8 @@ class PlayerGameController
                 $error = ['error' => 'Deck selecionado não está disponível.'];
                 $response->getBody()->write(json_encode($error));
                 return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
-            }
+            }            
+
             $sessionId = GameModel::createGame($ownerId, $deckSelect);
 
             $responseData = [
@@ -88,8 +89,7 @@ class PlayerGameController
             return $response->withStatus(400);            
         }                
         if(isset($result) && !intval($result)){
-            $error = ['error' => 'O ID é obrigatoriamnete um numero.'];
-            $response->getBody()->write(json_encode($error));
+            $response->getBody()->write(json_encode(['error' => 'O ID é obrigatoriamente um numero.']));
             return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
         }
         $response->getBody()->write(json_encode($result)); 
@@ -196,12 +196,24 @@ class PlayerGameController
         $session_id = $args['session_id'] ?? null;
 
         if (!$session_id) {
-            $response->getBody()->write(json_encode(['error' => 'session_id não fornecido.']));
+            $response->getBody()->write(json_encode(['error' => 'session id não fornecido.']));
             return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
         }
 
         try {
             $game = GameModel::getCreatedGameByID($session_id);
+
+            $status_game = $game['status_game'] ?? null;
+
+            if($status_game === 'started'){
+                $response->getBody()->write(json_encode(['error' => 'Partida já esta iniciada.']));
+                return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
+            }
+
+            if($status_game === 'finished'){
+                $response->getBody()->write(json_encode(['error' => 'Partida já esta finalizada.']));
+                return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
+            }
 
             if (!$game) {
                 $response->getBody()->write(json_encode(['error' => 'Sessão não encontrada.']));
@@ -234,8 +246,16 @@ class PlayerGameController
     public function getFirstCards(Request $request, Response $response, array $args) {
         $session_id = $args['session_id'] ?? null;
 
+        $current_game = GameModel::getCreatedGameByID($session_id);
+        $status_game = $current_game['status_game'] ?? null;
+
+        if ($status_game !== 'started') {
+            $response->getBody()->write(json_encode(['error' => 'Jogo ainda não foi iniciado.']));
+            return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+        }
+
         if (!$session_id) {
-            $response->getBody()->write(json_encode(['error' => 'session_id não fornecido.']));
+            $response->getBody()->write(json_encode(['error' => 'session id não fornecido.']));
             return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
         }
 
@@ -303,15 +323,16 @@ class PlayerGameController
             $result = GameModel::compareFirstCards($cards['player1'], $cards['player2'], $attribute);
     
             if (strpos($result, 'Jogador 1 venceu') !== false) {
-                $removedCard = GameModel::removeCardFromPlayer($session_id, 'player2');
-                GameModel::addCardToPlayer($session_id, 'cardPlayer1', $removedCard);    
+                $removedCards = GameModel::removeFirstCardFromPlayers($session_id);
+                GameModel::addCardsToWinner($session_id, 'cardPlayer1',[$removedCards['removedCardPlayer1'], $removedCards['removedCardPlayer2']]);
                 GameModel::updateLastRoundWinner($session_id, $game['owner_id']);
-
+            
             } elseif (strpos($result, 'Jogador 2 venceu') !== false) {
-                $removedCard = GameModel::removeCardFromPlayer($session_id, 'player1');
-                GameModel::addCardToPlayer($session_id, 'cardPlayer2', $removedCard);    
+                $removedCards = GameModel::removeFirstCardFromPlayers($session_id);
+                GameModel::addCardsToWinner($session_id, 'cardPlayer2',[$removedCards['removedCardPlayer1'], $removedCards['removedCardPlayer2']]);
                 GameModel::updateLastRoundWinner($session_id, $game['otherPlayer_id']);
             }
+            
 
             $cards = GameModel::getFirstCards($session_id);
 

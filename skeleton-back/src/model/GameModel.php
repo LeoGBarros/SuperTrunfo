@@ -233,61 +233,100 @@ class GameModel
     }
     
     
-    public static function removeCardFromPlayer($session_id, $losingPlayer) {
+    public static function removeFirstCardFromPlayers($session_id) {
         try {
             $pdo = self::connect();
     
-            $column = ($losingPlayer === 'player1') ? 'cardPlayer1' : 'cardPlayer2';
-    
-            $query = "SELECT $column FROM games WHERE session_id = ?";
+            // Consulta para obter as cartas dos dois jogadores
+            $query = "SELECT cardPlayer1, cardPlayer2 FROM games WHERE session_id = ?";
             $stmt = $pdo->prepare($query);
             $stmt->execute([$session_id]);
-            $cards = $stmt->fetchColumn();
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
     
-            if (!$cards) {
-                throw new PDOException("Nenhuma carta encontrada para o jogador perdedor.");
-            }
-            $decodedCards = json_decode($cards, true);
-            if (!is_array($decodedCards) || empty($decodedCards)) {
-                throw new PDOException("Cartas no formato inválido ou vazias.");
+            if (!$result || !isset($result['cardPlayer1'], $result['cardPlayer2'])) {
+                throw new PDOException("Cartas dos jogadores não encontradas ou inválidas.");
             }
     
-            $removedCard = array_shift($decodedCards); // Remove a primeira carta do array
+            // Decodifica as cartas de cada jogador
+            $cardsPlayer1 = json_decode($result['cardPlayer1'], true);
+            $cardsPlayer2 = json_decode($result['cardPlayer2'], true);
     
-            $updatedCards = json_encode($decodedCards);
-            $updateQuery = "UPDATE games SET $column = ? WHERE session_id = ?";
+            if (!is_array($cardsPlayer1) || empty($cardsPlayer1)) {
+                throw new PDOException("Cartas do jogador 1 estão no formato inválido ou estão vazias.");
+            }
+            if (!is_array($cardsPlayer2) || empty($cardsPlayer2)) {
+                throw new PDOException("Cartas do jogador 2 estão no formato inválido ou estão vazias.");
+            }
+    
+            // Remove a primeira carta de cada jogador
+            $removedCardPlayer1 = array_shift($cardsPlayer1);
+            $removedCardPlayer2 = array_shift($cardsPlayer2);
+    
+            // Atualiza as cartas no banco de dados
+            $updateQuery = "UPDATE games SET cardPlayer1 = ?, cardPlayer2 = ? WHERE session_id = ?";
             $updateStmt = $pdo->prepare($updateQuery);
-            $updateStmt->execute([$updatedCards, $session_id]);
-
-            return $removedCard;
-                
+            $updateStmt->execute([
+                json_encode($cardsPlayer1),
+                json_encode($cardsPlayer2),
+                $session_id
+            ]);
+    
+            // Retorna as cartas removidas de ambos os jogadores
+            return [
+                'removedCardPlayer1' => $removedCardPlayer1,
+                'removedCardPlayer2' => $removedCardPlayer2
+            ];
         } catch (PDOException $e) {
-            throw new PDOException("Erro ao atualizar as cartas do jogador perdedor: " . $e->getMessage());
+            throw new PDOException("Erro ao atualizar as cartas dos jogadores: " . $e->getMessage());
         }
     }
     
+    
 
 
-    public static function addCardToPlayer($session_id, $player, $card){
-        $sql = "SELECT $player FROM games WHERE session_id = ?";
+    public static function addCardsToWinner($session_id, $winner, $cards) {
         try {
+            // Valida que as cartas recebidas são um array
+            if (!is_array($cards) || empty($cards)) {
+                throw new \InvalidArgumentException("As cartas fornecidas devem ser um array não vazio.");
+            }
+    
+            // Conecta ao banco de dados
             $pdo = self::connect();
-            $stmt = $pdo->prepare($sql);
+    
+            // Consulta para obter o baralho atual do vencedor
+            $query = "SELECT $winner FROM games WHERE session_id = ?";
+            $stmt = $pdo->prepare($query);
             $stmt->execute([$session_id]);
             $game = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            $cards = json_decode($game[$player], true);
-            $cards[] = $card; // Adiciona a carta ao final do baralho
-            $updatedCards = json_encode($cards);
-
+    
+            if (!$game || !isset($game[$winner])) {
+                throw new PDOException("Baralho do vencedor não encontrado.");
+            }
+    
+            // Decodifica as cartas do vencedor
+            $currentCards = json_decode($game[$winner], true);
+    
+            if (!is_array($currentCards)) {
+                throw new PDOException("Baralho do vencedor está no formato inválido.");
+            }
+    
+            // Adiciona as novas cartas ao baralho do vencedor
+            $currentCards = array_merge($currentCards, $cards);
+    
             // Atualiza o baralho no banco de dados
-            $updateSql = "UPDATE games SET $player = ? WHERE session_id = ?";
-            $updateStmt = $pdo->prepare($updateSql);
+            $updatedCards = json_encode($currentCards);
+            $updateQuery = "UPDATE games SET $winner = ? WHERE session_id = ?";
+            $updateStmt = $pdo->prepare($updateQuery);
             $updateStmt->execute([$updatedCards, $session_id]);
+    
         } catch (PDOException $e) {
-            throw new \Exception('Erro ao adicionar carta ao jogador: ' . $e->getMessage());
+            throw new \Exception("Erro ao adicionar cartas ao jogador vencedor: " . $e->getMessage());
+        } catch (\Exception $e) {
+            throw new \Exception("Erro geral: " . $e->getMessage());
         }
     }
+    
 
 
     public static function updateLastRoundWinner($session_id, $winner_id)   {

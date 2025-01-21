@@ -14,18 +14,53 @@ class AdmDeckController
  
     public function createDeck(Request $request, Response $response, array $args)
     {
-        $params = json_decode($request->getBody()->getContents(), true) ?? [];
-        
-        $result = DeckModel::createDeck($params['name'], $params['disponible'],$params['image'], $params['Atributte01'], $params['Atributte02'], $params['Atributte03'], $params['Atributte04'], $params['Atributte05']);
-
-        if ($result === false) {
-            $response->getBody()->write(json_encode(['error' => 'Erro ao criar deck']));
-            return $response->withStatus(500);
+        $params = json_decode($request->getBody()->getContents(), true) ?? [];       
+        // Validação dos parâmetros
+        if (
+            empty($params['name']) || 
+            !isset($params['disponible']) || 
+            empty($params['image']) || 
+            empty($params['Atributte01']) || 
+            empty($params['Atributte02']) || 
+            empty($params['Atributte03']) || 
+            empty($params['Atributte04']) || 
+            empty($params['Atributte05'])
+        ) {
+            error_log('Erro: Campos obrigatórios estão vazios.');
+            $response->getBody()->write(json_encode(['error' => 'Todos os campos precisam estar preenchidos']));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
         }
 
-        $response->getBody()->write(json_encode(['id' => $result])); 
-        return $response->withHeader('Content-Type', 'application/json')->withStatus(201);
+        try {
+            $result = DeckModel::createDeck(
+                $params['name'],
+                $params['disponible'],
+                $params['image'],
+                $params['Atributte01'],
+                $params['Atributte02'],
+                $params['Atributte03'],
+                $params['Atributte04'],
+                $params['Atributte05']
+            );
+
+            if ($result === false) {                
+                $response->getBody()->write(json_encode(['error' => 'Erro ao criar deck']));
+                return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
+            }
+
+            $response->getBody()->write(json_encode(['id' => $result]));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(201);
+
+        } catch (\Exception $e) {
+            error_log('Exceção ao criar deck: ' . $e->getMessage());
+            $response->getBody()->write(json_encode([
+                'error' => 'Ocorreu um erro inesperado ao criar o deck',
+                'details' => $e->getMessage()
+            ]));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
+        }
     }
+
 
 
     public function getDeckByID(Request $request, Response $response, array $args){
@@ -71,7 +106,7 @@ class AdmDeckController
         if (!$currentDeck) {
             $response->getBody()->write(json_encode(['error' => 'Deck não encontrado']));
             return $response->withStatus(404);
-        }
+        }        
 
         $keys = ['name', 'disponible','image', 'Atributte01', 'Atributte02', 'Atributte03', 'Atributte04', 'Atributte05'];
 
@@ -90,7 +125,7 @@ class AdmDeckController
         $result = DeckModel::updateDeck($Deck_ID, $fieldsToUpdate);
 
         if ($result) {
-            $response->getBody()->write(json_encode(['success' => true]));
+            $response->getBody()->write(json_encode(['success' => 'Deck atualizado com Sucesso']));
             return $response->withStatus(200);
         } else {
             $response->getBody()->write(json_encode(['error' => 'Falha ao atualizar deck']));

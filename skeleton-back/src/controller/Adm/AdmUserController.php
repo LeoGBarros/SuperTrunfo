@@ -23,16 +23,21 @@ class AdmUserController
             $response->getBody()->write(json_encode(['error' => 'Não foi possivel criar usuario']));
             return $response->withStatus(400);            
         }                
-        $response->getBody()->write(json_encode(['succes' => 'Usuario criado com sucesso']));
-        return $response->withStatus(200);
+        $response->getBody()->write(json_encode(['success' => 'Usuario criado com sucesso']));
+        return $response->withStatus(200);        
     }
 
     public function getUserByID(Request $request, Response $response, array $args){
-        if (($result = UserModel::getUserByID($args['id'])) === null) {
+        if (($result = UserModel::getUserByID($args['id'])) === false) {
             $response->getBody()->write(json_encode(['error' => 'ID invalido']));
             return $response->withStatus(400);           
         }                
-        $response->getBody()->write(json_encode($result));
+        if(isset($result) && !intval($result)){
+            $error = ['error' => 'O ID é obrigatoriamente um numero.'];
+            $response->getBody()->write(json_encode($error));
+            return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+        }
+        $response->getBody()->write(json_encode($result)); 
         return $response;
     } 
         
@@ -42,17 +47,24 @@ class AdmUserController
             $response->getBody()->write(json_encode(['error' => 'Não foi possivel pegar todos os usuarios']));
             return $response->withStatus(400);            
         }                
-        $response->getBody()->write(json_encode($result)); // AJUSTAR ERROS
+        $response->getBody()->write(json_encode($result)); 
         return $response;
     }        
 
     public function deleteUserByID(Request $request, Response $response, array $args){
-        if (($result = UserModel::deleteUserByID($args['id'])) === null) {
-            $response->getBody()->write(json_encode($result));
-            return $response;            
+
+        $userExists = UserModel::getUserByID($args['id']);
+        if (!$userExists) {
+            $response->getBody()->write(json_encode(['message' => 'Usuário não encontrado. Verifique o ID e tente novamente.']));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
+        }
+
+        if (($result = UserModel::deleteUserByID($args['id'])) === false) {
+            $response->getBody()->write(json_encode(['error' => 'Não foi possivel deletar o usuario']));
+            return $response->withStatus(400);             
         }                
-        $response->getBody()->write(json_encode($result)); // AJUSTAR ERROS
-        return $response;
+        $response->getBody()->write(json_encode(['success' => 'Sucesso ao deletar o usuario']));
+            return $response->withStatus(200); 
     }
         
     public function updateUser(Request $request, Response $response, array $args){
@@ -101,10 +113,10 @@ class AdmUserController
         $errors = [];
         
         if (empty($data['username'])) {
-            $errors[] = 'Username é obrigatório.';
+            $errors = 'Username é obrigatório.';
         }
         if (empty($data['password'])) {
-            $errors[] = 'Senha é obrigatória.';
+            $errors = 'Senha é obrigatória.';
         }
 
         if (!empty($errors)) {
