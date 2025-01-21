@@ -236,8 +236,6 @@ class GameModel
     public static function removeFirstCardFromPlayers($session_id) {
         try {
             $pdo = self::connect();
-    
-            // Consulta para obter as cartas dos dois jogadores
             $query = "SELECT cardPlayer1, cardPlayer2 FROM games WHERE session_id = ?";
             $stmt = $pdo->prepare($query);
             $stmt->execute([$session_id]);
@@ -246,8 +244,6 @@ class GameModel
             if (!$result || !isset($result['cardPlayer1'], $result['cardPlayer2'])) {
                 throw new PDOException("Cartas dos jogadores não encontradas ou inválidas.");
             }
-    
-            // Decodifica as cartas de cada jogador
             $cardsPlayer1 = json_decode($result['cardPlayer1'], true);
             $cardsPlayer2 = json_decode($result['cardPlayer2'], true);
     
@@ -257,21 +253,13 @@ class GameModel
             if (!is_array($cardsPlayer2) || empty($cardsPlayer2)) {
                 throw new PDOException("Cartas do jogador 2 estão no formato inválido ou estão vazias.");
             }
+
+            $removedCardPlayer1 = array_shift($cardsPlayer1); //Remove a primeira carta do array
+            $removedCardPlayer2 = array_shift($cardsPlayer2); //Remove a primeira carta do array
     
-            // Remove a primeira carta de cada jogador
-            $removedCardPlayer1 = array_shift($cardsPlayer1);
-            $removedCardPlayer2 = array_shift($cardsPlayer2);
-    
-            // Atualiza as cartas no banco de dados
             $updateQuery = "UPDATE games SET cardPlayer1 = ?, cardPlayer2 = ? WHERE session_id = ?";
             $updateStmt = $pdo->prepare($updateQuery);
-            $updateStmt->execute([
-                json_encode($cardsPlayer1),
-                json_encode($cardsPlayer2),
-                $session_id
-            ]);
-    
-            // Retorna as cartas removidas de ambos os jogadores
+            $updateStmt->execute([json_encode($cardsPlayer1), json_encode($cardsPlayer2), $session_id]);    
             return [
                 'removedCardPlayer1' => $removedCardPlayer1,
                 'removedCardPlayer2' => $removedCardPlayer2
@@ -279,22 +267,14 @@ class GameModel
         } catch (PDOException $e) {
             throw new PDOException("Erro ao atualizar as cartas dos jogadores: " . $e->getMessage());
         }
-    }
-    
-    
-
+    }  
 
     public static function addCardsToWinner($session_id, $winner, $cards) {
         try {
-            // Valida que as cartas recebidas são um array
             if (!is_array($cards) || empty($cards)) {
                 throw new \InvalidArgumentException("As cartas fornecidas devem ser um array não vazio.");
             }
-    
-            // Conecta ao banco de dados
             $pdo = self::connect();
-    
-            // Consulta para obter o baralho atual do vencedor
             $query = "SELECT $winner FROM games WHERE session_id = ?";
             $stmt = $pdo->prepare($query);
             $stmt->execute([$session_id]);
@@ -303,18 +283,14 @@ class GameModel
             if (!$game || !isset($game[$winner])) {
                 throw new PDOException("Baralho do vencedor não encontrado.");
             }
-    
-            // Decodifica as cartas do vencedor
             $currentCards = json_decode($game[$winner], true);
     
             if (!is_array($currentCards)) {
                 throw new PDOException("Baralho do vencedor está no formato inválido.");
             }
     
-            // Adiciona as novas cartas ao baralho do vencedor
-            $currentCards = array_merge($currentCards, $cards);
+            $currentCards = array_merge($currentCards, $cards); // Junta os valores dos arrays em uma sequência.
     
-            // Atualiza o baralho no banco de dados
             $updatedCards = json_encode($currentCards);
             $updateQuery = "UPDATE games SET $winner = ? WHERE session_id = ?";
             $updateStmt = $pdo->prepare($updateQuery);
@@ -325,8 +301,7 @@ class GameModel
         } catch (\Exception $e) {
             throw new \Exception("Erro geral: " . $e->getMessage());
         }
-    }
-    
+    }   
 
 
     public static function updateLastRoundWinner($session_id, $winner_id)   {
