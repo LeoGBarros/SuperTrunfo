@@ -249,6 +249,12 @@ class PlayerGameController
         $current_game = GameModel::getCreatedGameByID($session_id);
         $status_game = $current_game['status_game'] ?? null;
 
+        if (!$current_game) {
+            $response->getBody()->write(json_encode(['error' => 'Jogo não encontrado.']));
+            return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+        }
+
+
         if ($status_game !== 'started') {
             $response->getBody()->write(json_encode(['error' => 'Jogo ainda não foi iniciado.']));
             return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
@@ -318,7 +324,7 @@ class PlayerGameController
                 $response->getBody()->write(json_encode(['error' => 'Cartas não encontradas para os jogadores.']));
                 return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
             }           
-
+                
     
             $result = GameModel::compareFirstCards($cards['player1'], $cards['player2'], $attribute);
     
@@ -331,8 +337,7 @@ class PlayerGameController
                 $removedCards = GameModel::removeFirstCardFromPlayers($session_id);
                 GameModel::addCardsToWinner($session_id, 'cardPlayer2',[$removedCards['removedCardPlayer1'], $removedCards['removedCardPlayer2']]);
                 GameModel::updateLastRoundWinner($session_id, $game['otherPlayer_id']);
-            }
-            
+            }             
 
             $cards = GameModel::getFirstCards($session_id);
 
