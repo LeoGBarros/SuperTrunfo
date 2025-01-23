@@ -304,16 +304,17 @@ class GameModel
     }   
 
 
-    public static function updateLastRoundWinner($session_id, $winner_id)   {
-        $sql = "UPDATE games SET last_round_winner = ? WHERE session_id = ?";
+    public static function updateLastRoundWinner($session_id, $winner_id){
+        $sql = "UPDATE games SET last_round_winner = ?, whose_turn = ? WHERE session_id = ?";
         try {
             $pdo = self::connect();
             $stmt = $pdo->prepare($sql);
-            $stmt->execute([$winner_id, $session_id]);
+            $stmt->execute([$winner_id, $winner_id, $session_id]);
         } catch (PDOException $e) {
-            throw new \Exception('Erro ao atualizar o vencedor da última rodada: ' . $e->getMessage());
+            throw new \Exception('Erro ao atualizar o vencedor da última rodada e o turno: ' . $e->getMessage());
         }
     }
+
 
     public static function setWinner($session_id, $winner_id) {
         $sql = "UPDATE games SET gameWinner = ? WHERE session_id = ?";
