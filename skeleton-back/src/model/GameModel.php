@@ -336,7 +336,67 @@ class GameModel
             throw new \Exception('Erro ao atualizar o status do jogo para "finished": ' . $e->getMessage());
         }
     }
+
+
+    public static function getTieCards($session_id){
+        $sql = "SELECT tie_cards FROM games WHERE session_id = ?";
+        try {
+            $pdo = self::connect();
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([$session_id]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($result && isset($result['tie_cards'])) {
+                $tieCards = json_decode($result['tie_cards'], true);                
+                return is_array($tieCards) ? $tieCards : [];
+            }
+            return [];
+        } catch (\PDOException $e) {
+            throw new \Exception('Erro ao buscar as cartas empatadas: ' . $e->getMessage());
+        }
+    }
     
+    public static function clearTieCards($session_id){
+        $sql = "UPDATE games SET tie_cards = JSON_ARRAY() WHERE session_id = ?";
+        try {
+            $pdo = self::connect();           
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([$session_id]);
+
+            return true; // Indica que a operação foi bem-sucedida
+        } catch (\PDOException $e) {
+            throw new \Exception('Erro ao limpar as cartas empatadas: ' . $e->getMessage());
+        }
+    }
+
+    public static function addTieCards($session_id, array $newCards){
+        $sqlGet = "SELECT tie_cards FROM games WHERE session_id = ?";
+        $sqlUpdate = "UPDATE games SET tie_cards = ? WHERE session_id = ?";
+        try {            
+            $pdo = self::connect();
+
+            
+            $stmt = $pdo->prepare($sqlGet);
+            $stmt->execute([$session_id]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            $existingTieCards = [];
+            if ($result && isset($result['tie_cards'])) {
+                $existingTieCards = json_decode($result['tie_cards'], true);
+            }
+
+            $updatedTieCards = array_merge($existingTieCards, $newCards);
+            
+            $stmt = $pdo->prepare($sqlUpdate);
+            $stmt->execute([json_encode($updatedTieCards), $session_id]);
+
+            return true; // Indica que a operação foi bem-sucedida
+        } catch (\PDOException $e) {
+            throw new \Exception('Erro ao adicionar cartas empatadas: ' . $e->getMessage());
+        }
+    }
+
+
 
 
 }

@@ -318,42 +318,49 @@ class PlayerGameController
                 $response->getBody()->write(json_encode(['error' => 'Não é a vez deste jogador.']));
                 return $response->withStatus(403)->withHeader('Content-Type', 'application/json');
             }
-            
+    
             $cards = GameModel::getFirstCards($session_id);
             if (!$cards || !isset($cards['player1'], $cards['player2'])) {
                 $response->getBody()->write(json_encode(['error' => 'Cartas não encontradas para os jogadores.']));
                 return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
-            }           
-                
+            }
     
             $result = GameModel::compareFirstCards($cards['player1'], $cards['player2'], $attribute);
     
             if (strpos($result, 'Jogador 1 venceu') !== false) {
                 $removedCards = GameModel::removeFirstCardFromPlayers($session_id);
-                GameModel::addCardsToWinner($session_id, 'cardPlayer1',[$removedCards['removedCardPlayer1'], $removedCards['removedCardPlayer2']]);
+                $tieCards = GameModel::getTieCards($session_id);
+                $allCards = array_merge($tieCards, [$removedCards['removedCardPlayer1'], $removedCards['removedCardPlayer2']]);
+                GameModel::addCardsToWinner($session_id, 'cardPlayer1', $allCards);
                 GameModel::updateLastRoundWinner($session_id, $game['owner_id']);
-            
+                GameModel::clearTieCards($session_id);
             } elseif (strpos($result, 'Jogador 2 venceu') !== false) {
                 $removedCards = GameModel::removeFirstCardFromPlayers($session_id);
-                GameModel::addCardsToWinner($session_id, 'cardPlayer2',[$removedCards['removedCardPlayer1'], $removedCards['removedCardPlayer2']]);
+                $tieCards = GameModel::getTieCards($session_id);
+                $allCards = array_merge($tieCards, [$removedCards['removedCardPlayer1'], $removedCards['removedCardPlayer2']]);
+                GameModel::addCardsToWinner($session_id, 'cardPlayer2', $allCards);
                 GameModel::updateLastRoundWinner($session_id, $game['otherPlayer_id']);
-            }             
-
+                GameModel::clearTieCards($session_id);
+            } else {
+                $removedCards = GameModel::removeFirstCardFromPlayers($session_id);
+                GameModel::addTieCards($session_id, [$removedCards['removedCardPlayer1'], $removedCards['removedCardPlayer2']]);
+            }    
+            // Verifica se algum jogador ficou sem cartas
             $cards = GameModel::getFirstCards($session_id);
-
-            if (!isset($cards['player1']) || empty($cards['player1'])) {                
+    
+            if (!isset($cards['player1']) || empty($cards['player1'])) {
                 GameModel::updateGameStatus($session_id, 'finished');
                 GameModel::setWinner($session_id, $game['otherPlayer_id']);
                 $response->getBody()->write(json_encode(['success' => true, 'message' => 'Jogador 2 venceu a partida.']));
                 return $response->withStatus(200)->withHeader('Content-Type', 'application/json');
             }
-            
-            if (!isset($cards['player2']) || empty($cards['player2'])) {                
+    
+            if (!isset($cards['player2']) || empty($cards['player2'])) {
                 GameModel::updateGameStatus($session_id, 'finished');
                 GameModel::setWinner($session_id, $game['owner_id']);
                 $response->getBody()->write(json_encode(['success' => true, 'message' => 'Jogador 1 venceu a partida.']));
                 return $response->withStatus(200)->withHeader('Content-Type', 'application/json');
-            }            
+            }
     
             $response->getBody()->write(json_encode(['success' => true, 'message' => $result]));
             return $response->withStatus(200)->withHeader('Content-Type', 'application/json');
@@ -362,6 +369,7 @@ class PlayerGameController
             return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
         }
     }
+    
 
     public function gameInformation(Request $request, Response $response, array $args): Response {
         $session_id = $args['session_id'] ?? null;
