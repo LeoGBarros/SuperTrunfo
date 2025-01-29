@@ -96,7 +96,7 @@ class UserModel
             // error_log('Token decodificado: ' . json_encode($decoded));
 
             // Verifica se o campo "admin" existe e é igual a 0
-            $isAdmin = isset($decoded->admin) && intval($decoded->admin) === 0;
+            $isAdmin = isset($decoded->admin) && intval($decoded->admin) === 1;
             // error_log('Retorno de isAdmin no checkAdmin: ' . var_export($isAdmin, true));
 
             return $isAdmin;

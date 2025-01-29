@@ -34,6 +34,29 @@ class PlayerGameController
             $data = json_decode($request->getBody()->getContents(), true);
             $deckSelect = $data['deck_select'] ?? null;
 
+
+            $decodedToken = JWT::decode($token, new Key('a9b1k87YbOpq3h2Mz8aXvP9wLQZ5R4pJ3cLrV5ZJ5DkRt0jQYzZnM+W8X4Lo0yZp', 'HS256'));
+            $user_ID = $decodedToken->user_ID ?? null;            
+
+            //verifica se participa de mais jogos
+            $allCurrentGames = GameModel::getAllCreatedGames();
+            $isInAnotherGame = false;   
+
+            foreach ($allCurrentGames as $game) {
+                $player2 = $game['otherPlayer_id'] ?? null;
+                $owner_id = $game['owner_id'] ?? null;
+
+                if ($user_ID === $owner_id || $user_ID === $player2) {
+                    $isInAnotherGame = true;
+                    break;
+                }
+            }
+
+            if ($isInAnotherGame) {
+                $response->getBody()->write(json_encode(['error' => 'Jogador já está dentro de outra partida.']));
+                return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+            }
+
             if (!$deckSelect) {
                 $error = ['error' => 'O campo Deck Select é obrigatório.'];
                 $response->getBody()->write(json_encode($error));

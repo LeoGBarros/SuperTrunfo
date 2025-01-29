@@ -78,7 +78,7 @@ class AdmDeckController
 
             $response->getBody()->write(json_encode(['error' => 'Não existe Decks']));
             return $response->withStatus(400);           
-            }                
+        }                
             $response->getBody()->write(json_encode($result)); 
             return $response;
     }

@@ -5,29 +5,39 @@ namespace Controller\Adm;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Model\CardModel;
+use Model\DeckModel;
 
 require __DIR__ . '/../../model/CardModel.php';
 
 class AdmCardController
 {  
 
-    public function createCard(Request $request, Response $response, array $args){       
+    public function createCard(Request $request, Response $response, array $args) {       
         $params = json_decode($request->getBody()->getContents(), true) ?? [];
-        
+    
         $requiredFields = ['Deck_ID', 'name', 'image', 'Score01', 'Score02', 'Score03', 'Score04', 'Score05'];
         $missingFields = array_diff($requiredFields, array_keys($params));
-
+    
+        // Verifica se há campos obrigatórios faltando
         if (!empty($missingFields)) {
             $response->getBody()->write(json_encode([
-                'error' => 'Necessario preencher todos os campos:',
-                'Campos obrigatórios' => $missingFields
+                'error' => 'Necessário preencher todos os campos.',
+                'Campos obrigatórios' => array_values($missingFields)
             ]));
             return $response->withStatus(400);
         }
-
-       
+    
+        $Deck_ID = $params['Deck_ID'] ?? null;
+    
+        // Verifica se Deck_ID foi passado e se é válido
+        if (empty($Deck_ID) || !DeckModel::getDeckByID($Deck_ID)) {
+            $response->getBody()->write(json_encode(['error' => 'Deck inválido ou inexistente.']));
+            return $response->withStatus(400);
+        }
+    
+        // Criação do card
         $result = CardModel::createCard(
-            $params['Deck_ID'],
+            $Deck_ID,
             $params['name'],
             $params['image'],
             $params['Score01'],
@@ -38,13 +48,14 @@ class AdmCardController
         );
         
         if ($result === false) {
-            $response->getBody()->write(json_encode(['error' => 'Não foi possível criar o cartão']));
-            return $response->withStatus(400);
+            $response->getBody()->write(json_encode(['error' => 'Não foi possível criar o cartão.']));
+            return $response->withStatus(500); // Alterado para 500, pois é um erro interno
         }
-       
+    
         $response->getBody()->write(json_encode($result));
         return $response->withStatus(201);
     }
+    
     public function getCardByID(Request $request, Response $response, array $args){
         if (($result = CardModel::getCardByID($args['id'])) === false) {
             $response->getBody()->write(json_encode(['error' => 'ID invalido']));
